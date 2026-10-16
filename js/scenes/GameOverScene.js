@@ -1,4 +1,5 @@
 import { GAME_WIDTH, MAX_HEARTS } from '../config.js';
+import gameState from '../systems/GameState.js';
 
 export default class GameOverScene extends Phaser.Scene {
     constructor() {
@@ -13,12 +14,16 @@ export default class GameOverScene extends Phaser.Scene {
     create() { // luodaan game over scene, pelaaja voi yrittää peliä uudelleen
         this.cameras.main.fadeIn(500, 0, 0, 0);
 
-        this.add.text(GAME_WIDTH / 2, 230, 'GAME OVER', {
+        this.add.text(GAME_WIDTH / 2, 210, 'GAME OVER', {
             fontFamily: 'Arial', fontSize: '80px', color: '#ff5252'
         }).setOrigin(0.5);
 
-        this.add.text(GAME_WIDTH / 2, 320, `You were caught in Room ${this.roomIndex + 1}`, {
+        this.add.text(GAME_WIDTH / 2, 300, `attempt ${gameState.tries} ended. you were caught in room ${this.roomIndex + 1}`, {
             fontFamily: 'Arial', fontSize: '28px', color: '#ffffff'
+        }).setOrigin(0.5);
+
+        this.add.text(GAME_WIDTH / 2, 345, 'everything you collected is lost.', {
+            fontFamily: 'Arial', fontSize: '22px', color: '#bbbbbb'
         }).setOrigin(0.5);
 
         const button = this.add.text(GAME_WIDTH / 2, 440, 'Try again', {
@@ -40,13 +45,14 @@ export default class GameOverScene extends Phaser.Scene {
         this.input.keyboard.once('keydown-ENTER', () => this.tryAgain());
     }
 
-    tryAgain() { // kun pelaaja yrittää uudestaan, huoneen indeksi ja sydämet resetataan
+    tryAgain() { // kun pelaaja haluaa yrittää uudelleen, peli aloitetaan alusta huoneesta 1
         if (this.leaving) return;
         this.leaving = true;
 
         this.cameras.main.fadeOut(400, 0, 0, 0);
         this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-            this.scene.start('RoomScene', { roomIndex: this.roomIndex, hearts: MAX_HEARTS });
+            gameState.nextTry(); 
+            this.scene.start('RoomScene', { roomIndex: 0 });
         });
     }
 }

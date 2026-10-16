@@ -3,7 +3,9 @@ import { ROOMS } from '../data/rooms.js';
 import Player from '../entities/Player.js';
 import Closet from '../entities/Closet.js';
 import Rush from '../entities/Rush.js';
+import Pickup from '../entities/Pickup.js';
 import Health from '../systems/Health.js';
+import gameState from '../systems/GameState.js';
 
 const WALL = 40;
 
@@ -14,11 +16,16 @@ export default class RoomScene extends Phaser.Scene {
 
     init(data) { 
         this.roomIndex = (data && data.roomIndex) || 0; // kertoo mikä huone rakennetaan, jos ei dataa -> oletuksena huone 1
+        this. arriveSide = (data && data.arriveSide) || 'start'; // kertoo mistä pelaaja tulee huoneeseen, oletuksena "start" (vasen puoli)
         this.room = ROOMS[this.roomIndex]; // valitsee huoneen datan, jonka jälkeen create() rakentaa huoneen sen perusteella
-        this.startHearts = (data && data.hearts !== undefined) ? data.hearts : MAX_HEARTS; // jos dataa ei ole, pelaajalla on oletuksena MAX_HEARTS sydäntä
-        this.hasKey = false; // avain resetataan aina kun huone vaihtuu
-        this.changingRoom = false;
-        this.hiding = false; // onko pelaaja kaapissa, hyökkäys ei voi osua häneen
+        this.isFinalGate = this.roomIndex === ROOMS.length - 1; // tarkistaa onko pelaaja viimeisessä huoneessa
+
+        this.changingRoom = false; 
+        this.hiding = false; 
+        this.notesOpen = false;
+        this.key = null;
+        this.backDoor = null;
+        this.messageTimer = null;
     }
 
     create() {
@@ -30,12 +37,14 @@ export default class RoomScene extends Phaser.Scene {
         this.buildBorder();
         this.room.walls.forEach(([x, y, w, h]) => this.addWall(x, y, w, h));
 
-        this.createDoor();
+        this.createDoors();
         this.createKey();
         this.createClosets();
+        this.createPickups();
 
-        this.player = new Player(this, this.room.playerStart.x, this.room.playerStart.y);
-        this.health = new Health(this, this.startHearts);
+        const spawn = this.getSpawn(); // määrittää pelaajan spawn pointin riippuen siitä, mistä hän tulee huoneeseen
+        this.player = new Player(this, spawn.x, spawn.y);
+        this.health = new Health(this, gameState.hearts); 
 
         this.hudText = this.add.text(20, 8, '', { // teksti kertoo pelaajalle huoneen numeron ja onko avain saatu
             fontFamily: 'Arial', fontSize: '22px', color: '#ffffff'
@@ -46,60 +55,156 @@ export default class RoomScene extends Phaser.Scene {
         this.messageText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20, '', {
             fontFamily: 'Arial', fontSize: '22px', color: '#ffd54f'
         }).setOrigin(0.5).setDepth(30);
+
+        this.createNotesPanel();
         this.updateHud(); 
 
         this.rush = new Rush(this, this.room.rush); 
 
 
-        // mitä käy kun pelaaja osuu seinään, oveen tai avaimeen:
+        // collision physics: mitä käy kun osutaan seinään, oveen yms.
         this.physics.add.collider(this.player, this.walls);
         this.physics.add.collider(this.player, this.door, () => this.onDoorTouched());
-        this.physics.add.overlap(this.player, this.key, () => this.collectKey());
+        if (this.backDoor) {
+            this.physics.add.collider(this.player, this.backDoor, () => this.onBackDoorTouched());
+        }
+        if (this.key) {
+            this.physics.add.overlap(this.player, this.key, () => this.collectKey());
+        }
 
-        
         this.input.keyboard.on('keydown-E', () => this.toggleHide());
+        this.input.keyboard.on('keydown-N', () => this.toggleNotes());
     }
 
-    buildBorder() {
-        const gapTop = this.room.door.y - this.room.door.height / 2;
-        const gapBottom = this.room.door.y + this.room.door.height / 2;
+    // -----------------------------------------------------------
+    //                      HUONEEN RAKENNUS
+    // -----------------------------------------------------------
 
+    buildBorder() { // huoneen reunat, niitten ulkopuolille ei voi liikkua
         this.addWall(GAME_WIDTH / 2, WALL / 2, GAME_WIDTH, WALL);
         this.addWall(GAME_WIDTH / 2, GAME_HEIGHT - WALL / 2, GAME_WIDTH, WALL);
-        this.addWall(WALL / 2, GAME_HEIGHT / 2, WALL, GAME_HEIGHT);
-        // jätetään seinään aukko ovelle:
-        this.addWall(GAME_WIDTH - WALL / 2, gapTop / 2, WALL, gapTop);
-        this.addWall(GAME_WIDTH - WALL / 2, (gapBottom + GAME_HEIGHT) / 2, WALL, GAME_HEIGHT - gapBottom);
+        this.buildSideWall(WALL / 2, this.room.backDoor);
+        this.buildSideWall(GAME_WIDTH - WALL / 2, this.room.door);
     }
 
-    addWall(x, y, width, height) {
+    buildSideWall(x, doorData) { // rako ovelle
+        if (!doorData) {
+            this.addWall(x, GAME_HEIGHT / 2, WALL, GAME_HEIGHT);
+            return;
+        }
+
+        const gapTop = doorData.y - doorData.height / 2;
+        const gapBottom = doorData.y + doorData.height / 2;
+
+        this.addWall(x, gapTop / 2, WALL, gapTop);
+        this.addWall(x, (gapBottom + GAME_HEIGHT) / 2, WALL, GAME_HEIGHT - gapBottom);
+    }
+
+    addWall(x, y, width, height) { 
         const wall = this.add.rectangle(x, y, width, height, 0x6d6d6d);
         this.walls.add(wall);
     }
 
-    createDoor() {
+    createDoors() { // määritellään ovi ja mahdollinen takaovi
         const d = this.room.door;
         this.door = this.add.rectangle(GAME_WIDTH - WALL / 2, d.y, WALL, d.height, 0x8d6e63);
         this.physics.add.existing(this.door, true);
+        this.updateDoorColor();
+
+        if (this.room.backDoor) {
+            const b = this.room.backDoor;
+            this.backDoor = this.add.rectangle(WALL / 2, b.y, WALL, b.height, 0x66bb6a);
+            this.physics.add.existing(this.backDoor, true);
+        }
     }
 
-    createKey() {
+    createKey() { 
+        if (gameState.roomState(this.roomIndex).key) return;
+
         const k = this.room.key;
         this.key = this.add.rectangle(k.x, k.y, 22, 22, 0xffd54f);
         this.physics.add.existing(this.key, true);
     }
 
-    createClosets() {
+    createClosets() { 
         this.closets = this.room.closets.map(([x, y]) => new Closet(this, x, y));
     }
 
-    collectKey() {
-        if (this.hasKey) return; // jos avain on jo kerätty, ei tehdä mitään
-        this.hasKey = true;
+    createPickups() { 
+        const s = gameState.roomState(this.roomIndex);
+        this.pickups = [];
+
+        if (this.room.object && !s.object) {
+            this.pickups.push(new Pickup(this, 'object', this.room.object));
+        }
+        if (this.room.note && !s.note) {
+            this.pickups.push(new Pickup(this, 'note', this.room.note));
+        }
+    }
+
+    createNotesPanel() { // luodaan paneeli, jossa näytetään pelaajalle kerätyt notes
+        this.notesBg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 780, 500, 0x000000, 0.92);
+        this.notesBg.setStrokeStyle(3, 0xf5f0dc).setDepth(40).setVisible(false);
+
+        this.notesText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '', {
+            fontFamily: 'Arial',
+            fontSize: '22px',
+            color: '#f5f0dc',
+            wordWrap: { width: 720 },
+            lineSpacing: 6
+        }).setOrigin(0.5).setDepth(41).setVisible(false);
+    }
+
+    getSpawn() { // määritellään spawn point, taka vai etuovi
+        if (this.arriveSide === 'right') {
+            return { x: GAME_WIDTH - 110, y: this.room.door.y };
+        }
+        if (this.arriveSide === 'left' && this.room.backDoor) {
+            return { x: 110, y: this.room.backDoor.y };
+        }
+        return this.room.playerStart;
+    }
+
+
+
+// -----------------------------------------------------------
+//                      PELAAJAN TOIMINNOT
+// -----------------------------------------------------------
+
+
+    collectKey() { // kun pelaaja kerää avaimen, se poistetaan näkyvistä ja HUD päivittyy
+        const s = gameState.roomState(this.roomIndex);
+        if (s.key) return; // jos avain on jo kerätty, ei tehdä mitään
+
+        s.key = true;
         this.key.destroy();
-        this.door.setFillStyle(0x66bb6a);
+        this.updateDoorColor();
         this.updateHud();
         this.showMessage('You got the key!');
+    }
+    
+    collectNearbyPickups() { // tarkistaa onko pelaaja tarpeeksi lähellä esinettä, jos on -> kerätään se
+        this.pickups = this.pickups.filter((p) => {
+            if (!p.isNear(this.player)) return true;
+            this.collectPickup(p);
+            return false;
+        });
+    }
+
+    collectPickup(pickup) { // kun pelaaja kerää esineen, se poistetaan näkyvistä ja HUD päivittyy
+        const s = gameState.roomState(this.roomIndex);
+
+        if (pickup.kind === 'object') {
+            s.object = true;
+            this.showMessage('you found an object.');
+        } else {
+            s.note = true;
+            this.showMessage('you found a note. press N to read your notes.');
+        }
+
+        pickup.destroy();
+        this.updateDoorColor();
+        this.updateHud();
     }
 
     toggleHide() { // pelaaja voi piiloutua kaappiin, jos on tarpeeksi lähellä sitä
@@ -121,25 +226,114 @@ export default class RoomScene extends Phaser.Scene {
         this.showMessage('Hiding... press E to come out', 0);
     }
 
-    onDoorTouched() { // kun pelaaja koskettaa ovea, tarkistetaan onko hänellä avain
-        if (this.changingRoom) return; 
+   toggleNotes() {
+        if (this.changingRoom) return;
 
-        if (!this.hasKey) {
-            this.showMessage('The door is locked. You must find the key first.');
+        this.notesOpen = !this.notesOpen;
+        if (this.notesOpen) {
+            this.notesText.setText(this.buildNotesText());
+        }
+        this.notesBg.setVisible(this.notesOpen);
+        this.notesText.setVisible(this.notesOpen);
+    }
+
+    buildNotesText() {
+        const lines = ['NOTES   (press N to close)', ''];
+
+        let found = 0;
+        ROOMS.forEach((room, i) => {
+            if (gameState.roomState(i).note) {
+                lines.push(room.note.text);
+                found += 1;
+            }
+        });
+        if (found === 0) lines.push('You have not found any notes yet.');
+
+        lines.push('');
+        lines.push('WHAT YOU HAVE TAKEN');
+        ROOMS.forEach((room, i) => {
+            const s = gameState.roomState(i);
+            lines.push(
+                `Room ${i + 1}:   key ${s.key ? '✓' : '✗'}    object ${s.object ? '✓' : '✗'}    note ${s.note ? '✓' : '✗'}`
+            );
+        });
+
+        return lines.join('\n');
+    }
+
+// -----------------------------------------------------------
+//                      OVET JA HUONEET
+// -----------------------------------------------------------
+
+    canOpenExit() { // tarkistaa voiko pelaaja mennä vikaan huoneeseen, eli onko avain, kaikki esineet ja notes
+        if (!gameState.roomState(this.roomIndex).key) return false;
+
+        if (this.isFinalGate) {
+            return gameState.countObjects() === gameState.totalObjects()
+                && gameState.countNotes() === gameState.totalNotes();
+        }
+        return true;
+    }
+
+    updateDoorColor() { // ovin väri eri kun pelaajalla on avain ja kaikki esineet ja notes kerätty
+        this.door.setFillStyle(this.canOpenExit() ? 0x66bb6a : 0x8d6e63);
+    }
+
+    missingMessage() { // jos pelaajalla ei ole kaikkia kamoja, näytetään teksti, mitä puuttuu
+        const objects = gameState.totalObjects() - gameState.countObjects();
+        const notes = gameState.totalNotes() - gameState.countNotes();
+
+        const parts = [];
+        if (objects > 0) parts.push(`${objects} object${objects === 1 ? '' : 's'}`);
+        if (notes > 0) parts.push(`${notes} note${notes === 1 ? '' : 's'}`);
+
+        return `The final door won't open. You are missing ${parts.join(' and ')}.`;
+    }
+
+    onDoorTouched() { // kun pelaaja koskee ovee, tarkistetaan sen kamat
+        if (this.changingRoom) return;
+
+        if (!gameState.roomState(this.roomIndex).key) {
+            this.showMessage('The door is locked. You must find the key first.', 2500);
             return;
         }
 
+        if (!this.canOpenExit()) {
+            this.showMessage(this.missingMessage(), 3000);
+            return;
+        }
+
+        if (this.isFinalGate) {
+            // temporary: the final room is built in step 7
+            this.showMessage('The gate opens! (The final room comes in step 7.)', 3000);
+            return;
+        }
+
+        this.changeRoom(this.roomIndex + 1, 'left');
+    }
+
+    onBackDoorTouched() { // kun pelaaja koskee takaovee, mennään edelliseen huoneeseen
+        if (this.changingRoom) return;
+        this.changeRoom(this.roomIndex - 1, 'right');
+    }
+
+    changeRoom(nextIndex, arriveSide) { // kun pelaaja menee oveen, vaihdetaan huonetta
         this.changingRoom = true;
         this.player.body.setVelocity(0, 0);
 
-        // tää poistuu: vikan huoneen jälkeen takas huone 1
-        const next = (this.roomIndex + 1) % ROOMS.length;
-
         this.cameras.main.fadeOut(500, 0, 0, 0);
         this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-            this.scene.restart({ roomIndex: next, hearts: this.health.hearts }); // restart huone, mutta säilytetään sydämet
+            this.scene.restart({ roomIndex: nextIndex, arriveSide: arriveSide });
         });
     }
+
+
+
+// -----------------------------------------------------------
+//                      DAMAGE JA GAME OVER
+// -----------------------------------------------------------  
+
+
 
     hurtPlayer() {
         if (this.changingRoom) return; // jos huonetta vaihdetaan, ei oteta damagee
@@ -147,6 +341,8 @@ export default class RoomScene extends Phaser.Scene {
 
         this.updateHud();
         this.cameras.main.shake(150, 0.01);
+
+        gameState.hearts = this.health.hearts; // päivitetään game state, jotta pelaajan sydämet säilyy huoneiden välillä
 
         this.tweens.add({ // pelaaja vilkkuu kun ottaa damagee
             targets: this.player,
@@ -172,9 +368,19 @@ export default class RoomScene extends Phaser.Scene {
         });
     }
 
+
+    // -----------------------------------------------------------
+    //                           HUD
+    // -----------------------------------------------------------      
+
+
     updateHud() {
-        this.hudText.setText(
-            `Room ${this.roomIndex + 1} of ${ROOMS.length}    Key: ${this.hasKey ? 'yes' : 'no'}`
+        const s = gameState.roomState(this.roomIndex); // päivitetään HUD
+
+        this.hudText.setText( 
+            `Room ${this.roomIndex + 1} of ${ROOMS.length}   Key: ${s.key ? 'yes' : 'no'}   ` +
+            `Objects ${gameState.countObjects()}/${gameState.totalObjects()}   ` +
+            `Notes ${gameState.countNotes()}/${gameState.totalNotes()}   Try ${gameState.tries}`
         );
         const full = '♥'.repeat(this.health.hearts);
         const empty = '♡'.repeat(MAX_HEARTS - this.health.hearts);
@@ -196,10 +402,16 @@ export default class RoomScene extends Phaser.Scene {
     
     
 
-    update() { 
+    update() { // pelin update loop, tarkistetaan pelaajan liikkuminen, kerätyt esineet ja kaappiin piiloutuminen
         if (this.changingRoom) return;
 
-        if (!this.hiding) this.player.update();
+        if (this.hiding || this.notesOpen) {
+            this.player.body.setVelocity(0, 0);
+        } else {
+            this.player.update();
+        }
+
+        if (!this.hiding) this.collectNearbyPickups();
 
         this.closets.forEach((c) => c.setPromptVisible(!this.hiding && c.isNear(this.player)));
         this.rush.update();
