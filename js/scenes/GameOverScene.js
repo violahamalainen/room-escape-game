@@ -1,5 +1,6 @@
 import { GAME_WIDTH, MAX_HEARTS } from '../config.js';
 import gameState from '../systems/GameState.js';
+import { createButton, fadeToScene } from '../systems/UI.js';
 
 export default class GameOverScene extends Phaser.Scene {
     constructor() {
@@ -40,6 +41,11 @@ export default class GameOverScene extends Phaser.Scene {
 
         this.add.text(GAME_WIDTH / 2, 520, 'or press Enter', {
             fontFamily: 'Arial', fontSize: '20px', color: '#999999'
+        }).setOrigin(0.5);
+
+        createButton(this, GAME_WIDTH / 2, 610, 'Main menu', () => fadeToScene(this, 'MenuScene'), 28);
+        this.add.text(GAME_WIDTH / 2, 668, 'Leaving ends this run. It will not be on the scoreboard.', {
+            fontFamily: 'Arial', fontSize: '18px', color: '#888888'
         }).setOrigin(0.5);
 
         this.input.keyboard.once('keydown-ENTER', () => this.tryAgain());

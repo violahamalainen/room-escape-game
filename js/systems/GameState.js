@@ -3,6 +3,7 @@ import { ROOMS } from '../data/rooms.js';
 
 class GameState {
     constructor() {
+        this.playerName = ''; // pelaajan nimi, ei nollaudu uuden pelin alussa
         this.resetAll();
     }
 

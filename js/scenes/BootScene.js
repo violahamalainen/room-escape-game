@@ -4,7 +4,7 @@ export default class BootScene extends Phaser.Scene {
     }
 
     create() {
-        this.scene.start('RoomScene');
+        this.scene.start('MenuScene');
     }
 }
 // lataa kuvii ja äänii ja muit kamoi täällä

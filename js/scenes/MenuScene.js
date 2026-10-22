@@ -1,0 +1,75 @@
+import { GAME_WIDTH } from '../config.js';
+import gameState from '../systems/GameState.js';
+import { createButton, fadeToScene } from '../systems/UI.js';
+
+// oikea HTML-kenttä canvasin päällä, tyyli annetaan CSS-tekstinä
+const INPUT_STYLE = 'width: 340px; height: 52px; font-size: 28px; text-align: center; color: #ffffff; background: #1b1b1b; border: 3px solid #8d8d8d; border-radius: 6px; outline: none;';
+
+export default class MenuScene extends Phaser.Scene {
+    constructor() {
+        super('MenuScene');
+    }
+
+    init() {
+        this.leaving = false;
+    }
+
+    create() {
+        this.input.keyboard.clearCaptures(); // pelin nuolet ja WASD estäisivät muuten kirjoittamisen nimikenttään
+        this.cameras.main.fadeIn(500, 0, 0, 0);
+
+        this.add.text(GAME_WIDTH / 2, 130, 'ESCAPE GAME', {
+            fontFamily: 'Arial', fontSize: '80px', color: '#ffffff'
+        }).setOrigin(0.5);
+
+        this.add.text(GAME_WIDTH / 2, 255, 'Enter your name', {
+            fontFamily: 'Arial', fontSize: '26px', color: '#bbbbbb'
+        }).setOrigin(0.5);
+
+        this.nameInput = this.add.dom(GAME_WIDTH / 2, 315, 'input', INPUT_STYLE);
+        const node = this.nameInput.node; // node on se oikea HTML-elementti
+        node.type = 'text';
+        node.maxLength = 12;
+        node.placeholder = 'Your name';
+        node.autocomplete = 'off';
+        node.value = gameState.playerName; // edellisen pelin nimi säilyy
+        node.addEventListener('input', () => this.refreshStartButton());
+        node.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') this.startGame();
+        });
+
+        this.hint = this.add.text(GAME_WIDTH / 2, 365, '', {
+            fontFamily: 'Arial', fontSize: '22px', color: '#ff8a80'
+        }).setOrigin(0.5);
+
+        this.startButton = createButton(this, GAME_WIDTH / 2, 450, 'Start game', () => this.startGame());
+        createButton(this, GAME_WIDTH / 2, 535, 'Scoreboard', () => fadeToScene(this, 'ScoreboardScene'));
+        createButton(this, GAME_WIDTH / 2, 620, 'Settings', () => fadeToScene(this, 'SettingsScene'));
+
+        this.refreshStartButton();
+    }
+
+    getName() { // nimi ilman ylimääräisiä välilyöntejä
+        return this.nameInput.node.value.trim();
+    }
+
+    refreshStartButton() { // nappi himmeä kunnes nimi on kirjoitettu
+        const hasName = this.getName().length > 0;
+        this.startButton.setAlpha(hasName ? 1 : 0.45);
+        if (hasName) this.hint.setText('');
+    }
+
+    startGame() {
+        if (this.leaving) return;
+
+        const name = this.getName();
+        if (name.length === 0) {
+            this.hint.setText('Type a name first.');
+            return;
+        }
+
+        gameState.playerName = name;
+        gameState.resetAll(); // uusi peli: yritykset ja kello nollataan
+        fadeToScene(this, 'RoomScene', { roomIndex: 0 });
+    }
+}

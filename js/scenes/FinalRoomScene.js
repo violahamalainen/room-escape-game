@@ -3,6 +3,7 @@ import { ROOMS } from '../data/rooms.js';
 import { PUZZLE } from '../data/puzzle.js';
 import { createShape } from '../entities/Pickup.js';
 import gameState from '../systems/GameState.js';
+import { formatTime } from '../systems/UI.js';
 
 const SLOT_X = [400, 560, 720, 880]; // sockets ja tray käyttää samoja x-paikkoja
 const SOCKET_Y = 390;
@@ -10,12 +11,6 @@ const TRAY_Y = 590;
 const WALL_START = 40;   // seinän sisäreuna alussa
 const WALL_TRAVEL = 210; // kuinka paljon seinät liikkuu sisäänpäin
 const FLICKER_FROM = 30000; // vilkkuminen alkaa kun aikaa on alle 30 s
-
-function formatTime(seconds) { 
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${String(s).padStart(2, '0')}`;
-}
 
 export default class FinalRoomScene extends Phaser.Scene {
     constructor() {
@@ -199,25 +194,17 @@ export default class FinalRoomScene extends Phaser.Scene {
     //                      VOITTO JA HÄVIÖ
     // -----------------------------------------------------------
 
-    win() { // TEMPORARY
+    win() { // peli päättyy: kello pysäytetään, liikutaan voittoruutuun
         this.finished = true;
         this.overlay.setAlpha(0);
+        const seconds = gameState.elapsedSeconds(); // tämä on lopullinen peliaika
         this.cameras.main.flash(500, 255, 255, 255);
 
-        this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.8).setDepth(60);
-        this.add.text(GAME_WIDTH / 2, 280, 'YOU ESCAPED!', {
-            fontFamily: 'Arial', fontSize: '80px', color: '#66bb6a'
-        }).setOrigin(0.5).setDepth(61);
-        this.add.text(GAME_WIDTH / 2, 380, `Tries: ${gameState.tries}     Time: ${formatTime(gameState.elapsedSeconds())}`, {
-            fontFamily: 'Arial', fontSize: '32px', color: '#ffffff'
-        }).setOrigin(0.5).setDepth(61);
-        this.add.text(GAME_WIDTH / 2, 470, '(temporary screen, the real win screen comes in step 8)\nPress Enter to play again', {
-            fontFamily: 'Arial', fontSize: '22px', color: '#999999', align: 'center'
-        }).setOrigin(0.5).setDepth(61);
-
-        this.input.keyboard.once('keydown-ENTER', () => {
-            gameState.resetAll(); // uusi peli: yritykset ja kello nollataan
-            this.scene.start('RoomScene', { roomIndex: 0 });
+        this.time.delayedCall(900, () => {
+            this.cameras.main.fadeOut(700, 0, 0, 0);
+            this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+                this.scene.start('WinScene', { seconds });
+            });
         });
     }
 
