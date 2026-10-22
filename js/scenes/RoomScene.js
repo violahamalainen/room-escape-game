@@ -6,6 +6,7 @@ import Rush from '../entities/Rush.js';
 import Pickup from '../entities/Pickup.js';
 import Health from '../systems/Health.js';
 import gameState from '../systems/GameState.js';
+import Screech from '../entities/Screech.js';
 
 const WALL = 40;
 
@@ -59,7 +60,8 @@ export default class RoomScene extends Phaser.Scene {
         this.createNotesPanel();
         this.updateHud(); 
 
-        this.rush = new Rush(this, this.room.rush); 
+        this.rush = new Rush(this, this.room.rush);
+        this.screech = this.room.screech ? new Screech(this, this.room.screech) : null; // luodaan screech vain jos huoneessa on screech asetukset
 
 
         // collision physics: mitä käy kun osutaan seinään, oveen yms.
@@ -265,14 +267,14 @@ export default class RoomScene extends Phaser.Scene {
 //                      OVET JA HUONEET
 // -----------------------------------------------------------
 
-    canOpenExit() { // tarkistaa voiko pelaaja mennä vikaan huoneeseen, eli onko avain, kaikki esineet ja notes
-        if (!gameState.roomState(this.roomIndex).key) return false;
+    canOpenExit() { // voidaanko avata ovi?
+        if (!gameState.roomState(this.roomIndex).key) return false; // jos ei avainta, ovi ei aukea
 
-        if (this.isFinalGate) {
+        if (this.isFinalGate) { // jos pelaaja on viimeisessä huoneessa, tarkistetaan onko hän kerännyt kaikki kamat
             return gameState.countObjects() === gameState.totalObjects()
                 && gameState.countNotes() === gameState.totalNotes();
         }
-        return true;
+        return true; 
     }
 
     updateDoorColor() { // ovin väri eri kun pelaajalla on avain ja kaikki esineet ja notes kerätty

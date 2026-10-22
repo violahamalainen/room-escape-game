@@ -2,6 +2,7 @@ export const ROOMS = [
     {
         name: 'Room 1',
         floorColor: 0x2b2b2b,
+        light: { radius: 300, aim: 'keyboard' },
         playerStart: { x: 120, y: 360 },
         door: { y: 360, height: 120 },
         key: { x: 900, y: 140 },
@@ -16,6 +17,7 @@ export const ROOMS = [
     {
         name: 'Room 2',
         floorColor: 0x26303a,
+        light: { radius: 190, aim: 'mouse' },
         playerStart: { x: 120, y: 560 },
         door: { y: 360, height: 120 },
         backDoor: { y: 360, height: 120 },
@@ -27,11 +29,13 @@ export const ROOMS = [
             [800, 520, 40, 320]
         ],
         closets: [[250, 600], [600, 450], [1000, 200]],
-        rush: { speed: 950, warningMs: 2500, minGapMs: 20000, maxGapMs: 32000, firstDelayMs: 8000 }
+        rush: { speed: 950, warningMs: 2500, minGapMs: 20000, maxGapMs: 32000, firstDelayMs: 8000 },
+        screech: { reactMs: 2500, minGapMs: 25000, maxGapMs: 40000, firstDelayMs: 12000 }
     },
     {
         name: 'Room 3',
         floorColor: 0x2a2a35,
+        light: { radius: 150, aim: 'mouse' },
         playerStart: { x: 120, y: 360 },
         door: { y: 360, height: 120 },
         backDoor: { y: 360, height: 120 },
@@ -50,6 +54,7 @@ export const ROOMS = [
     {
         name: 'Room 4',
         floorColor: 0x2e2430,
+        light: { radius: 120, aim: 'mouse' },
         playerStart: { x: 120, y: 360 },
         door: { y: 360, height: 120 },
         backDoor: { y: 360, height: 120 },
@@ -62,7 +67,8 @@ export const ROOMS = [
             [920, 300, 40, 520]
         ],
         closets: [[200, 600], [500, 150], [780, 150], [1100, 500]],
-        rush: { speed: 1250, warningMs: 2000, minGapMs: 9000, maxGapMs: 18000, firstDelayMs: 5000 }
+        rush: { speed: 1250, warningMs: 2000, minGapMs: 9000, maxGapMs: 18000, firstDelayMs: 5000 },
+        screech: { reactMs: 2000, minGapMs: 20000, maxGapMs: 30000, firstDelayMs: 10000 }
     }
 ];
 
