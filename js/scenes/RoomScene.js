@@ -7,6 +7,7 @@ import Pickup from '../entities/Pickup.js';
 import Health from '../systems/Health.js';
 import gameState from '../systems/GameState.js';
 import Screech from '../entities/Screech.js';
+import Eyes from '../entities/Eyes.js';
 
 const WALL = 40;
 
@@ -42,6 +43,7 @@ export default class RoomScene extends Phaser.Scene {
         this.createKey();
         this.createClosets();
         this.createPickups();
+        this.createEyes();
 
         const spawn = this.getSpawn(); // määrittää pelaajan spawn pointin riippuen siitä, mistä hän tulee huoneeseen
         this.player = new Player(this, spawn.x, spawn.y);
@@ -142,6 +144,14 @@ export default class RoomScene extends Phaser.Scene {
         if (this.room.note && !s.note) {
             this.pickups.push(new Pickup(this, 'note', this.room.note));
         }
+    }
+
+    createEyes() {
+        this.eyes = (this.room.eyes || []).map((data) => new Eyes(this, data));
+    }
+
+    eyesBusy() {
+        return this.eyes.some((e) => e.isBusy());
     }
 
     createNotesPanel() { // luodaan paneeli, jossa näytetään pelaajalle kerätyt notes
@@ -417,5 +427,7 @@ export default class RoomScene extends Phaser.Scene {
 
         this.closets.forEach((c) => c.setPromptVisible(!this.hiding && c.isNear(this.player)));
         this.rush.update();
+        if (this.screech) this.screech.update(); // screech tarkistaa piiloutuiko pelaaja
+        this.eyes.forEach((e) => e.update()); // jokainen silmäpari tarkistaa liikkuuko pelaaja
     }
 }

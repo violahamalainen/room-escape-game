@@ -6,6 +6,7 @@ export default class Rush { // odota, varota, hyökkää, odota...
         this.settings = settings;
         this.active = false; // kertoo onko rush liikkeellä vai ei
         this.hitThisPass = false; // vaan yks damage per hyökkäys
+        this.busy = false; // true, kun rush vilkkuu tai on liikkeellä
 
         this.overlay = scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000);
         this.overlay.setAlpha(0).setDepth(20);
@@ -22,8 +23,13 @@ export default class Rush { // odota, varota, hyökkää, odota...
 
     startWarning() { 
         if (this.scene.changingRoom) return; // jos huone vaihtuu, ei hyökkäystä aloiteta
+        if (this.scene.eyesBusy()) { // silmät on auki tai varoittaa -> rush odottaa sekunnin ja yrittää uudestaan
+            this.scheduleNext(1000);
+            return;
+        }
+        this.busy = true; // rush alkaa, silmät ei saa nyt avautua
 
-        this.scene.showMessage('The lights flicker... hide! (E)', this.settings.warningMs);  // poista tää paska
+        this.scene.showMessage('The lights flicker... hide! (E)', this.settings.warningMs);
 
         this.flickerEvent = this.scene.time.addEvent({ 
             delay: 90, 
@@ -60,6 +66,7 @@ export default class Rush { // odota, varota, hyökkää, odota...
     finish() { 
         this.body.setVisible(false); // hyökkäys on ohi, piilotetaan se
         this.active = false;
+        this.busy = false; // rush ohi, silmät saa avautua
 
         if (this.scene.hiding) { // poista nääki paskat
             this.scene.showMessage('It has passed. Press E to come out.', 0);

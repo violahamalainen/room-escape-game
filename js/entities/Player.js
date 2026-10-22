@@ -23,4 +23,11 @@ export default class Player extends Phaser.GameObjects.Rectangle {
         const direction = new Phaser.Math.Vector2(dx, dy).normalize().scale(PLAYER_SPEED);
         this.body.setVelocity(direction.x, direction.y);
     }
+
+    isTryingToMove() { // true, jos jotain liikkumisnäppäintä painetaan
+        return this.cursors.left.isDown || this.cursors.right.isDown
+            || this.cursors.up.isDown || this.cursors.down.isDown
+            || this.keys.A.isDown || this.keys.D.isDown
+            || this.keys.W.isDown || this.keys.S.isDown;
+    }
 }

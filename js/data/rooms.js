@@ -2,7 +2,6 @@ export const ROOMS = [
     {
         name: 'Room 1',
         floorColor: 0x2b2b2b,
-        light: { radius: 300, aim: 'keyboard' },
         playerStart: { x: 120, y: 360 },
         door: { y: 360, height: 120 },
         key: { x: 900, y: 140 },
@@ -17,7 +16,6 @@ export const ROOMS = [
     {
         name: 'Room 2',
         floorColor: 0x26303a,
-        light: { radius: 190, aim: 'mouse' },
         playerStart: { x: 120, y: 560 },
         door: { y: 360, height: 120 },
         backDoor: { y: 360, height: 120 },
@@ -35,7 +33,6 @@ export const ROOMS = [
     {
         name: 'Room 3',
         floorColor: 0x2a2a35,
-        light: { radius: 150, aim: 'mouse' },
         playerStart: { x: 120, y: 360 },
         door: { y: 360, height: 120 },
         backDoor: { y: 360, height: 120 },
@@ -49,12 +46,15 @@ export const ROOMS = [
             [980, 360, 40, 400]
         ],
         closets: [[180, 150], [470, 360], [820, 360], [1130, 200]],
-        rush: { speed: 1100, warningMs: 2300, minGapMs: 14000, maxGapMs: 24000, firstDelayMs: 6000 }
+        rush: { speed: 1100, warningMs: 2300, minGapMs: 14000, maxGapMs: 24000, firstDelayMs: 6000 },
+        eyes: [
+            { x: 420, y: 62, zone: { x: 40, y: 40, w: 600, h: 640 }, warnMs: 1000, minOpenMs: 1500, maxOpenMs: 3500, minClosedMs: 12000, maxClosedMs: 30000, firstDelayMs: 10000 },
+            { x: 810, y: 658, zone: { x: 640, y: 40, w: 600, h: 640 }, warnMs: 1000, minOpenMs: 1500, maxOpenMs: 3500, minClosedMs: 12000, maxClosedMs: 30000, firstDelayMs: 20000 }
+        ]
     },
     {
         name: 'Room 4',
         floorColor: 0x2e2430,
-        light: { radius: 120, aim: 'mouse' },
         playerStart: { x: 120, y: 360 },
         door: { y: 360, height: 120 },
         backDoor: { y: 360, height: 120 },
@@ -68,7 +68,10 @@ export const ROOMS = [
         ],
         closets: [[200, 600], [500, 150], [780, 150], [1100, 500]],
         rush: { speed: 1250, warningMs: 2000, minGapMs: 9000, maxGapMs: 18000, firstDelayMs: 5000 },
-        screech: { reactMs: 2000, minGapMs: 20000, maxGapMs: 30000, firstDelayMs: 10000 }
-    }
+        screech: { reactMs: 2000, minGapMs: 20000, maxGapMs: 30000, firstDelayMs: 10000 },
+        eyes: [
+            { x: 640, y: 62, zone: { x: 40, y: 40, w: 1200, h: 640 }, warnMs: 1000, minOpenMs: 1500, maxOpenMs: 3500, minClosedMs: 15000, maxClosedMs: 35000, firstDelayMs: 12000 }
+        ]
+            }
 ];
 
