@@ -24,7 +24,6 @@ export default class RoomScene extends Phaser.Scene {
 
         this.changingRoom = false; 
         this.hiding = false; 
-        this.notesOpen = false;
         this.key = null;
         this.backDoor = null;
         this.messageTimer = null;
@@ -59,7 +58,7 @@ export default class RoomScene extends Phaser.Scene {
             fontFamily: 'Arial', fontSize: '22px', color: '#ffd54f'
         }).setOrigin(0.5).setDepth(30);
 
-        this.createNotesPanel();
+     
         this.updateHud(); 
 
         this.rush = new Rush(this, this.room.rush);
@@ -77,7 +76,7 @@ export default class RoomScene extends Phaser.Scene {
         }
 
         this.input.keyboard.on('keydown-E', () => this.toggleHide());
-        this.input.keyboard.on('keydown-N', () => this.toggleNotes());
+        this.input.keyboard.on('keydown-ZERO', () => this.scene.start('FinalRoomScene')); // TESTI !!!! POISTA
     }
 
     // -----------------------------------------------------------
@@ -154,18 +153,6 @@ export default class RoomScene extends Phaser.Scene {
         return this.eyes.some((e) => e.isBusy());
     }
 
-    createNotesPanel() { // luodaan paneeli, jossa näytetään pelaajalle kerätyt notes
-        this.notesBg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 780, 500, 0x000000, 0.92);
-        this.notesBg.setStrokeStyle(3, 0xf5f0dc).setDepth(40).setVisible(false);
-
-        this.notesText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '', {
-            fontFamily: 'Arial',
-            fontSize: '22px',
-            color: '#f5f0dc',
-            wordWrap: { width: 720 },
-            lineSpacing: 6
-        }).setOrigin(0.5).setDepth(41).setVisible(false);
-    }
 
     getSpawn() { // määritellään spawn point, taka vai etuovi
         if (this.arriveSide === 'right') {
@@ -211,7 +198,7 @@ export default class RoomScene extends Phaser.Scene {
             this.showMessage('you found an object.');
         } else {
             s.note = true;
-            this.showMessage('you found a note. press N to read your notes.');
+            this.showMessage('you found a note. might be useful later...');
         }
 
         pickup.destroy();
@@ -238,40 +225,6 @@ export default class RoomScene extends Phaser.Scene {
         this.showMessage('Hiding... press E to come out', 0);
     }
 
-   toggleNotes() {
-        if (this.changingRoom) return;
-
-        this.notesOpen = !this.notesOpen;
-        if (this.notesOpen) {
-            this.notesText.setText(this.buildNotesText());
-        }
-        this.notesBg.setVisible(this.notesOpen);
-        this.notesText.setVisible(this.notesOpen);
-    }
-
-    buildNotesText() {
-        const lines = ['NOTES   (press N to close)', ''];
-
-        let found = 0;
-        ROOMS.forEach((room, i) => {
-            if (gameState.roomState(i).note) {
-                lines.push(room.note.text);
-                found += 1;
-            }
-        });
-        if (found === 0) lines.push('You have not found any notes yet.');
-
-        lines.push('');
-        lines.push('WHAT YOU HAVE TAKEN');
-        ROOMS.forEach((room, i) => {
-            const s = gameState.roomState(i);
-            lines.push(
-                `Room ${i + 1}:   key ${s.key ? '✓' : '✗'}    object ${s.object ? '✓' : '✗'}    note ${s.note ? '✓' : '✗'}`
-            );
-        });
-
-        return lines.join('\n');
-    }
 
 // -----------------------------------------------------------
 //                      OVET JA HUONEET
@@ -291,15 +244,8 @@ export default class RoomScene extends Phaser.Scene {
         this.door.setFillStyle(this.canOpenExit() ? 0x66bb6a : 0x8d6e63);
     }
 
-    missingMessage() { // jos pelaajalla ei ole kaikkia kamoja, näytetään teksti, mitä puuttuu
-        const objects = gameState.totalObjects() - gameState.countObjects();
-        const notes = gameState.totalNotes() - gameState.countNotes();
-
-        const parts = [];
-        if (objects > 0) parts.push(`${objects} object${objects === 1 ? '' : 's'}`);
-        if (notes > 0) parts.push(`${notes} note${notes === 1 ? '' : 's'}`);
-
-        return `The final door won't open. You are missing ${parts.join(' and ')}.`;
+    missingMessage() { // jos kaikkia kamoja ei ole, kerrotaan vain että kaikki pitää löytää
+        return "The final door won't open. You must find all the objects and notes first.";
     }
 
     onDoorTouched() { // kun pelaaja koskee ovee, tarkistetaan sen kamat
@@ -315,9 +261,15 @@ export default class RoomScene extends Phaser.Scene {
             return;
         }
 
-        if (this.isFinalGate) {
-            // temporary: the final room is built in step 7
-            this.showMessage('The gate opens! (The final room comes in step 7.)', 3000);
+        if (this.isFinalGate) { // kaikki kerätty -> viimeinen huone, ovi lukittuu perässä
+            this.changingRoom = true;
+            this.player.body.setVelocity(0, 0);
+            this.showMessage('The door locks behind you...', 0);
+
+            this.cameras.main.fadeOut(700, 0, 0, 0);
+            this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+                this.scene.start('FinalRoomScene');
+            });
             return;
         }
 
@@ -389,10 +341,8 @@ export default class RoomScene extends Phaser.Scene {
     updateHud() {
         const s = gameState.roomState(this.roomIndex); // päivitetään HUD
 
-        this.hudText.setText( 
-            `Room ${this.roomIndex + 1} of ${ROOMS.length}   Key: ${s.key ? 'yes' : 'no'}   ` +
-            `Objects ${gameState.countObjects()}/${gameState.totalObjects()}   ` +
-            `Notes ${gameState.countNotes()}/${gameState.totalNotes()}   Try ${gameState.tries}`
+        this.hudText.setText(
+            `Room ${this.roomIndex + 1} of ${ROOMS.length}   Key: ${s.key ? 'yes' : 'no'}   Try ${gameState.tries}`
         );
         const full = '♥'.repeat(this.health.hearts);
         const empty = '♡'.repeat(MAX_HEARTS - this.health.hearts);
@@ -417,7 +367,7 @@ export default class RoomScene extends Phaser.Scene {
     update() { // pelin update loop, tarkistetaan pelaajan liikkuminen, kerätyt esineet ja kaappiin piiloutuminen
         if (this.changingRoom) return;
 
-        if (this.hiding || this.notesOpen) {
+        if (this.hiding) {
             this.player.body.setVelocity(0, 0);
         } else {
             this.player.update();

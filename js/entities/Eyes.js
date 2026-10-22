@@ -102,7 +102,7 @@ export default class Eyes {
         if (this.state !== 'open' || this.hitThisOpening) return; // vain kun silmät on auki ja ei ole vielä osunut
 
         const s = this.scene;
-        if (s.hiding || s.notesOpen) return; // kaapissa tai notes auki -> turvassa
+        if (s.hiding) return; // kaapissa = turvassa
         if (!Phaser.Geom.Rectangle.Contains(this.zoneRect, s.player.x, s.player.y)) return; // pelaaja ei ole vahditulla alueella
 
         if (s.player.isTryingToMove()) { // liikkui silmien ollessa auki

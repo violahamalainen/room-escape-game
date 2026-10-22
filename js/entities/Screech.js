@@ -106,7 +106,7 @@ export default class Screech {
 
     onClicked() {
         if (!this.active) return;
-        if (this.scene.notesOpen || this.scene.changingRoom) return;
+        if (this.scene.changingRoom) return;
 
         this.timeout.remove(false); // lopettaa "liian hidas" ajastimen
         this.active = false;

@@ -6,7 +6,7 @@ export const ROOMS = [
         door: { y: 360, height: 120 },
         key: { x: 900, y: 140 },
         object: { x: 900, y: 620, shape: 'circle', color: 0xab47bc },
-        note: { x: 350, y: 600, text: 'note 1' },
+        note: { x: 350, y: 600, text: 'The square is in the last socket.' },
         walls: [
             [640, 360, 40, 300]
         ],
@@ -21,7 +21,7 @@ export const ROOMS = [
         backDoor: { y: 360, height: 120 },
         key: { x: 600, y: 120 },
         object: { x: 1050, y: 600, shape: 'square', color: 0x42a5f5 },
-        note: { x: 250, y: 460, text: 'note 2' },
+        note: { x: 250, y: 460, text: 'The star sits right next to the triangle' },
         walls: [
             [400, 200, 40, 320],
             [800, 520, 40, 320]
@@ -38,7 +38,7 @@ export const ROOMS = [
         backDoor: { y: 360, height: 120 },
         key: { x: 500, y: 120 },
         object: { x: 1100, y: 620, shape: 'triangle', color: 0xff7043 },
-        note: { x: 470, y: 610, text: 'note 3' },
+        note: { x: 470, y: 610, text: 'The circle is between the star and the square' },
         walls: [
             [300, 360, 40, 400],
             [640, 200, 40, 300],
@@ -60,7 +60,7 @@ export const ROOMS = [
         backDoor: { y: 360, height: 120 },
         key: { x: 780, y: 600 },
         object: { x: 1150, y: 130, shape: 'star', color: 0x26c6da },
-        note: { x: 480, y: 380, text: 'note 4' },
+        note: { x: 480, y: 380, text: 'The triangle is at one of the two ends' },
         walls: [
             [360, 300, 40, 520],
             [640, 420, 40, 520],

@@ -1,4 +1,4 @@
-function createShape(scene, data) { 
+export function createShape(scene, data) {
     switch (data.shape) { // luodaan esineen muoto sen mukaan, mikä on määritelty dataan
         case 'square':
             return scene.add.rectangle(data.x, data.y, 30, 30, data.color);
