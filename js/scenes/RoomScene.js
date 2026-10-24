@@ -36,6 +36,8 @@ export default class RoomScene extends Phaser.Scene {
     create() {
         this.cameras.main.fadeIn(500, 0, 0, 0);  // huoneitten välinen fade efekti
         this.director = new Director(this); // huoneen ohjaaja: vain yksi pelottava tapahtuma kerrallaan
+        gameState.startClock(); // kello käy vain kun pelaaja on huoneessa
+        this.events.once('shutdown', () => gameState.stopClock()); // kello pysähtyy kun scene päättyy
 
         this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, this.room.floorColor);
 

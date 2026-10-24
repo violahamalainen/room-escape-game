@@ -56,8 +56,8 @@ export default class GameOverScene extends Phaser.Scene {
             fontFamily: 'Arial', fontSize: '20px', color: '#999999'
         }).setOrigin(0.5);
 
-        createButton(this, GAME_WIDTH / 2, 620, 'Main menu', () => fadeToScene(this, 'MenuScene'), 28);
-        this.add.text(GAME_WIDTH / 2, 675, 'Leaving ends this run. It will not be on the scoreboard.', {
+        createButton(this, GAME_WIDTH / 2, 620, 'Main menu', () => this.goToMenu(), 28);
+        this.add.text(GAME_WIDTH / 2, 675, 'Leaving counts as a failed try. Choose Continue on the menu to carry on', {
             fontFamily: 'Arial', fontSize: '18px', color: '#888888'
         }).setOrigin(0.5);
 
@@ -73,5 +73,11 @@ export default class GameOverScene extends Phaser.Scene {
             gameState.nextTry(); 
             this.scene.start('RoomScene', { roomIndex: 0 });
         });
+    }
+
+    goToMenu() { // valikkoon poistuminen lasketaan epäonnistuneeksi yritykseksi
+        if (this.leaving) return; // estää tuplaklikkauksen
+        gameState.nextTry(); // yritykset +1, sydämet ja kerätyt esineet nollataan
+        fadeToScene(this, 'MenuScene');
     }
 }

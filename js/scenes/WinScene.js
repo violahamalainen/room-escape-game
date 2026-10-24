@@ -20,6 +20,8 @@ export default class WinScene extends Phaser.Scene {
         const entry = saveScore(gameState.playerName || 'Player', gameState.tries, this.seconds);
         const rank = sortScores(loadScores()).findIndex((s) => s.id === entry.id) + 1; // 0 jos ei löytynyt
 
+        gameState.endRun(); // tämä peli on päättynyt, seuraava Start aloittaa uuden
+
         this.add.text(GAME_WIDTH / 2, 150, 'YOU ESCAPED!', {
             fontFamily: 'Arial', fontSize: '80px', color: '#66bb6a'
         }).setOrigin(0.5);

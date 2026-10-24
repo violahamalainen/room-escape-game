@@ -1,6 +1,6 @@
 import { GAME_WIDTH } from '../config.js';
 import gameState from '../systems/GameState.js';
-import { createButton, fadeToScene } from '../systems/UI.js';
+import { createButton, fadeToScene, formatTime } from '../systems/UI.js';
 
 // oikea HTML-kenttä canvasin päällä, tyyli annetaan CSS-tekstinä
 const INPUT_STYLE = 'width: 340px; height: 52px; font-size: 28px; text-align: center; color: #ffffff; background: #1b1b1b; border: 3px solid #8d8d8d; border-radius: 6px; outline: none;';
@@ -38,8 +38,12 @@ export default class MenuScene extends Phaser.Scene {
             if (event.key === 'Enter') this.startGame();
         });
 
-        this.hint = this.add.text(GAME_WIDTH / 2, 365, '', {
+        this.hint = this.add.text(GAME_WIDTH / 2, 365, '', { // virheilmoitus, esim. "Type a name first."
             fontFamily: 'Arial', fontSize: '22px', color: '#ff8a80'
+        }).setOrigin(0.5);
+
+        this.runInfo = this.add.text(GAME_WIDTH / 2, 392, '', { // tieto keskeneräisestä pelistä
+            fontFamily: 'Arial', fontSize: '20px', color: '#9e9e9e'
         }).setOrigin(0.5);
 
         this.startButton = createButton(this, GAME_WIDTH / 2, 450, 'Start game', () => this.startGame());
@@ -55,10 +59,22 @@ export default class MenuScene extends Phaser.Scene {
         return this.nameInput.node.value.trim();
     }
 
-    refreshStartButton() { // nappi himmeä kunnes nimi on kirjoitettu
-        const hasName = this.getName().length > 0;
-        this.startButton.setAlpha(hasName ? 1 : 0.45);
+    refreshStartButton() { // nappi, nappiteksti ja infoteksti päivittyvät nimen mukaan
+        const name = this.getName();
+        const hasName = name.length > 0;
+        const continuing = gameState.canContinue(name); // onko tällä nimellä keskeneräinen peli
+
+        this.startButton.setText(continuing ? 'Continue' : 'Start game');
+        this.startButton.setAlpha(hasName ? 1 : 0.45); // himmeä kunnes nimi on kirjoitettu
         if (hasName) this.hint.setText('');
+
+        if (continuing) {
+            this.runInfo.setText(`Run in progress: try ${gameState.tries}, time ${formatTime(gameState.elapsedSeconds())}`);
+        } else if (hasName && gameState.runActive) {
+            this.runInfo.setText('A different name starts a new run. Your old run will be lost.');
+        } else {
+            this.runInfo.setText('');
+        }
     }
 
     startGame() {
@@ -70,8 +86,11 @@ export default class MenuScene extends Phaser.Scene {
             return;
         }
 
-        gameState.playerName = name;
-        gameState.resetAll(); // uusi peli: yritykset ja kello nollataan
+        if (gameState.canContinue(name)) {
+            gameState.playerName = name; // jatketaan samaa peliä, kirjoitusasu (isot kirjaimet) voi vaihtua
+        } else {
+            gameState.beginRun(name); // uusi peli: yritykset ja kello nollataan
+        }
         fadeToScene(this, 'RoomScene', { roomIndex: 0 });
     }
 }

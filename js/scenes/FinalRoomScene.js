@@ -31,6 +31,8 @@ export default class FinalRoomScene extends Phaser.Scene {
 
     create() {
         this.cameras.main.fadeIn(700, 0, 0, 0);
+        gameState.startClock(); // kello käy vain kun pelaaja on huoneessa
+        this.events.once('shutdown', () => gameState.stopClock()); // kello pysähtyy kun scene päättyy
 
         this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1e1a24); // lattia
 
