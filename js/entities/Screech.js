@@ -3,8 +3,7 @@ import { TEXTS } from '../data/texts.js';
 
 const WARNING_MS = 700;  // varoitus ennenkuin hirviö ilmestyy
 
-
-// toistuva cycle: odota, varoita, ilmesty, odota klikkauta, toista
+// toistuva cycle: odota, varoita, ilmesty, odota klikkausta, toista
 export default class Screech { 
     constructor(scene, settings) {
         this.scene = scene;
@@ -21,45 +20,54 @@ export default class Screech {
     }
 
     scheduleNext(delayMs) {
-        this.scene.time.delayedCall(delayMs, () => this.warn());
+        this.scene.time.delayedCall(delayMs, () => this.tryStart());
     }
 
-    warn() {
+    tryStart() { // alkaa vain jos pelaaja ei piilossa ja ohjaaja antaa luvan
         if (this.scene.changingRoom) return;
 
-        if (this.scene.hiding) { // jos piilossa, schedule next try
+        if (this.scene.hiding) { // jos piilossa, ei hyökkäystä tällä kertaa
             this.scheduleNext(this.nextGap());
             return;
         }
 
+        const director = this.scene.director;
+        if (!director.canStart()) { // jokin toinen tapahtuma on käynnissä -> yritetään hetken päästä uudestaan
+            this.scheduleNext(Phaser.Math.Between(800, 1600));
+            return;
+        }
+
+        director.start('screech');
         this.scene.cameras.main.flash(250, 255, 0, 0);
-        this.scene.showMessage('TEXTS.screechWarning', WARNING_MS);
+        this.scene.showMessage(TEXTS.screechWarning, WARNING_MS);
         this.scene.time.delayedCall(WARNING_MS, () => this.appear()); // varotuksen jälkeen kutsutaan appear()
     }
 
     appear() {
         if (this.scene.changingRoom) return;
 
-        if (this.scene.hiding) { // varmistetaan että pelaaja ei ole piilossa
+        if (this.scene.hiding) { // pelaaja ehti piiloutua varoituksen aikana
+            this.scene.director.end();
             this.scheduleNext(this.nextGap());
             return;
         }
 
-        const spot = this.findSpot(); // mihin ilmestytään
-        if (!spot) {
+        const spot = this.findSpot();
+        if (!spot) { // ei löytynyt vapaata paikkaa, yritetään pian uudestaan
+            this.scene.director.end();
             this.scheduleNext(3000);
             return;
         }
 
-        this.createCreature(spot.x, spot.y); 
+        this.createCreature(spot.x, spot.y);
         this.active = true;
         this.timeout = this.scene.time.delayedCall(this.settings.reactMs, () => this.missed());
     }
 
-    findSpot() { // mihin screech ilmestyy
+    findSpot() { // etsii paikan 150-220 pikseliä pelaajasta, ei seinän sisällä
         const p = this.scene.player;
         const wallAreas = this.scene.walls.getChildren().map((wall) =>
-            Phaser.Geom.Rectangle.Inflate(wall.getBounds(), 40, 40) // hirviö pysyy kauempana seinistä
+            Phaser.Geom.Rectangle.Inflate(wall.getBounds(), 40, 40)
         );
 
         for (let attempt = 0; attempt < 40; attempt++) {
@@ -73,10 +81,10 @@ export default class Screech {
 
             return { x, y };
         }
-        return null; // jos ei löydy paikkaa, return null
+        return null;
     }
 
-    createCreature(x, y) {
+    createCreature(x, y) { // hirviö tehdään muodoista, container yhdistää ne yhdeksi klikattavaksi olioksi
         const s = this.scene;
 
         const body = s.add.circle(0, 0, 32, 0x8e0000);
@@ -88,8 +96,8 @@ export default class Screech {
         const mouth = s.add.rectangle(0, 14, 26, 8, 0x000000);
 
         this.creature = s.add.container(x, y, [body, eyeLeft, eyeRight, pupilLeft, pupilRight, mouth]);
-        this.creature.setSize(80, 80);
-        this.creature.setInteractive({ useHandCursor: true }); // tekee hirviöstä interaktiivisen
+        this.creature.setSize(80, 80); // klikkausalue, containerilla ei ole omaa kokoa
+        this.creature.setInteractive({ useHandCursor: true });
         this.creature.setDepth(12);
         this.creature.on('pointerdown', () => this.onClicked());
 
@@ -104,18 +112,19 @@ export default class Screech {
         });
     }
 
-    onClicked() {
+    onClicked() { // pelaaja ehti klikata ajoissa
         if (!this.active) return;
         if (this.scene.changingRoom) return;
 
-        this.timeout.remove(false); // lopettaa "liian hidas" ajastimen
+        this.timeout.remove(false); // peruu "liian hidas" -ajastimen
         this.active = false;
-        this.removeCreature(true); // ajaa hirviö katoaa animaation
+        this.removeCreature(true);
         this.scene.showMessage(TEXTS.screechBanished, 900);
+        this.scene.director.end();
         this.scheduleNext(this.nextGap());
     }
 
-    missed() { // aika loppui, pelaaja oli liian hidas
+    missed() { // aika loppui ennen klikkausta
         this.active = false;
         this.removeCreature(false);
 
@@ -124,12 +133,13 @@ export default class Screech {
             this.scene.showMessage(TEXTS.screechMissed, 1200);
         }
 
+        this.scene.director.end();
         this.scheduleNext(this.nextGap());
     }
 
     removeCreature(animated) {
         const c = this.creature;
-        this.creature = null;
+        this.creature = null; // nollataan heti, ettei samaa poisteta kahdesti
         if (!c) return;
 
         this.scene.tweens.killTweensOf(c);
@@ -148,11 +158,12 @@ export default class Screech {
         }
     }
 
-    update() {
+    update() { // jos pelaaja piiloutuu kun hirviö on esillä, hirviö katoaa ilman damagea
         if (this.active && this.scene.hiding) {
             this.timeout.remove(false);
             this.active = false;
             this.removeCreature(false);
+            this.scene.director.end();
             this.scheduleNext(this.nextGap());
         }
     }

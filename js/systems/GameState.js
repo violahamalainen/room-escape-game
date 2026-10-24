@@ -11,6 +11,7 @@ class GameState {
     resetAll() {
         this.tries = 1;
         this.startTime = Date.now();
+        this.seen = {}; // mitkä "ensimmäinen kerta" -kuplat on jo nähty tässä pelissä
         this.resetRun();
     }
 

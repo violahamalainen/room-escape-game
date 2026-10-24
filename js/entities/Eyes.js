@@ -1,9 +1,9 @@
 import { TEXTS } from '../data/texts.js';
 
-const LOOKS = { // silmien ulkonäkö
+const LOOKS = { // silmien ulkonäkö, alueen sävy on vaalea eikä punainen
     closed:  { color: 0x555555, scaleY: 0.12, zoneAlpha: 0 },
-    warning: { color: 0xffd54f, scaleY: 0.55, zoneAlpha: 0.06 },
-    open:    { color: 0xff5252, scaleY: 1,    zoneAlpha: 0.15 }
+    warning: { color: 0xffd54f, scaleY: 0.55, zoneAlpha: 0.05 },
+    open:    { color: 0xff5252, scaleY: 1,    zoneAlpha: 0.10 }
 };
 
 export default class Eyes {
@@ -16,8 +16,8 @@ export default class Eyes {
         const z = data.zone;
         this.zoneRect = new Phaser.Geom.Rectangle(z.x, z.y, z.w, z.h); // näkymätön laatikko, jolla tarkistetaan onko pelaaja alueella
 
-        // punainen sävy vahdittavan alueen päälle (alpha 0 = piilossa alussa)
-        this.zone = scene.add.rectangle(z.x + z.w / 2, z.y + z.h / 2, z.w, z.h, 0xff0000);
+        // vaalea hohto vahdittavan alueen päälle (alpha 0 = piilossa alussa)
+        this.zone = scene.add.rectangle(z.x + z.w / 2, z.y + z.h / 2, z.w, z.h, 0xcfd8dc);
         this.zone.setAlpha(0).setDepth(0);
 
         const whiteLeft = scene.add.ellipse(-22, 0, 34, 24, LOOKS.closed.color);
@@ -29,7 +29,7 @@ export default class Eyes {
         // container yhdistää muodot yhdeksi, jolloin ne liikkuu ja skaalautuu yhdessä
         this.face = scene.add.container(data.x, data.y, [whiteLeft, whiteRight, pupilLeft, pupilRight]);
         this.face.setDepth(4);
-        this.face.setScale(1, LOOKS.closed.scaleY); // litistetään kiinni olevan näköseks
+        this.face.setScale(1, LOOKS.closed.scaleY); // litistetään kiinni olevan näköiseksi
 
         this.scheduleOpen(data.firstDelayMs); // aloitetaan ensimmäinen odotus
     }
@@ -42,30 +42,23 @@ export default class Eyes {
         return Phaser.Math.Between(this.data.minOpenMs, this.data.maxOpenMs);
     }
 
-    scheduleOpen(delayMs) { // ajastin: kun aika kuluu, alkaa varoitus
+    scheduleOpen(delayMs) { // ajastin: kun aika kuluu, yritetään aloittaa varoitus
         this.scene.time.delayedCall(delayMs, () => this.startWarning());
-    }
-
-    isBusy() { // true jos silmät ei ole kiinni, rush tarkistaa tän
-        return this.state !== 'closed';
-    }
-
-    otherEyesBusy() { // true jos jokin toinen silmäpari varoittaa tai on auki
-        return this.scene.eyes.some((e) => e !== this && e.isBusy());
     }
 
     startWarning() {
         if (this.scene.changingRoom) return; // jos huonetta vaihdetaan, ei tehdä mitään
 
-        // rush tai toinen silmäpari on liikkeellä -> odotetaan hetki ja yritetään uudestaan
-        if ((this.scene.rush && this.scene.rush.busy) || this.otherEyesBusy()) {
+        const director = this.scene.director;
+        if (!director.canStart()) { // jokin toinen tapahtuma on käynnissä (rush, screech tai toinen silmäpari) -> odotetaan
             this.scheduleOpen(Phaser.Math.Between(800, 1600));
             return;
         }
 
+        director.start('eyes');
         this.state = 'warning';
         this.setLook('warning'); // silmät aukeaa puoliksi keltaisena
-        if (!this.scene.hiding) { // ei poisteta "Hiding..." tekstiä jos pelaaja on kaapissa
+        if (!this.scene.hiding) { // ei piirretä kuplaa jos pelaaja on kaapissa
             this.scene.showMessage(TEXTS.eyesWarning, this.data.warnMs);
         }
         this.scene.time.delayedCall(this.data.warnMs, () => this.open());
@@ -88,6 +81,7 @@ export default class Eyes {
     close() {
         this.state = 'closed';
         this.setLook('closed');
+        this.scene.director.end(); // tapahtuma päättyi, hiljainen väli alkaa
         if (!this.scene.changingRoom) { // huoneen vaihdossa kierto vain loppuu
             this.scheduleOpen(this.closedGap());
         }
@@ -104,7 +98,7 @@ export default class Eyes {
         if (this.state !== 'open' || this.hitThisOpening) return; // vain kun silmät on auki ja ei ole vielä osunut
 
         const s = this.scene;
-        if (s.hiding) return; // kaapissa = turvassa
+        if (s.hiding) return; // kaapissa -> turvassa
         if (!Phaser.Geom.Rectangle.Contains(this.zoneRect, s.player.x, s.player.y)) return; // pelaaja ei ole vahditulla alueella
 
         if (s.player.isTryingToMove()) { // liikkui silmien ollessa auki

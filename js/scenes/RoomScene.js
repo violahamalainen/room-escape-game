@@ -9,6 +9,7 @@ import Health from '../systems/Health.js';
 import gameState from '../systems/GameState.js';
 import Screech from '../entities/Screech.js';
 import Eyes from '../entities/Eyes.js';
+import Director from '../systems/Director.js';
 
 const WALL = 40;
 
@@ -34,6 +35,7 @@ export default class RoomScene extends Phaser.Scene {
 
     create() {
         this.cameras.main.fadeIn(500, 0, 0, 0);  // huoneitten välinen fade efekti
+        this.director = new Director(this); // huoneen ohjaaja: vain yksi pelottava tapahtuma kerrallaan
 
         this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, this.room.floorColor);
 
@@ -75,6 +77,9 @@ export default class RoomScene extends Phaser.Scene {
 
         this.rush = new Rush(this, this.room.rush);
         this.screech = this.room.screech ? new Screech(this, this.room.screech) : null; // luodaan screech vain jos huoneessa on screech asetukset
+        if (this.eyes.length > 0 && this.director.firstTime('eyes')) { // silmien ensimmäinen kupla vain kerran koko pelissä
+            this.time.delayedCall(1200, () => this.showMessage(TEXTS.eyesFirst, 4500));
+        }
 
 
         // collision physics: mitä käy kun osutaan seinään, oveen yms.
@@ -163,9 +168,6 @@ export default class RoomScene extends Phaser.Scene {
         this.eyes = (this.room.eyes || []).map((data) => new Eyes(this, data)); // jos huoneessa ei ole silmiä, lista on tyhjä
     }
 
-    eyesBusy() { // true jos jotkut silmät varoittaa tai on auki, rush kysyy tätä
-        return this.eyes.some((e) => e.isBusy());
-    }
 
     getSpawn() { // määritellään spawn point, taka vai etuovi
         if (this.arriveSide === 'right') {
@@ -307,7 +309,7 @@ export default class RoomScene extends Phaser.Scene {
         this.lastCause = cause; // muistetaan syy, viimeinen osuma ratkaisee mitä game over näyttää
 
         this.updateHud();
-        this.cameras.main.shake(150, 0.01);
+        this.cameras.main.shake(150, 0.01, true);
 
         gameState.hearts = this.health.hearts; // päivitetään game state, jotta pelaajan sydämet säilyy huoneiden välillä
 
