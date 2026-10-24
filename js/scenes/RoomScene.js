@@ -1,5 +1,6 @@
 import { GAME_WIDTH, GAME_HEIGHT, MAX_HEARTS } from '../config.js';
 import { ROOMS } from '../data/rooms.js';
+import { TEXTS } from '../data/texts.js';
 import Player from '../entities/Player.js';
 import Closet from '../entities/Closet.js';
 import Rush from '../entities/Rush.js';
@@ -18,15 +19,17 @@ export default class RoomScene extends Phaser.Scene {
 
     init(data) { 
         this.roomIndex = (data && data.roomIndex) || 0; // kertoo mikä huone rakennetaan, jos ei dataa -> oletuksena huone 1
-        this. arriveSide = (data && data.arriveSide) || 'start'; // kertoo mistä pelaaja tulee huoneeseen, oletuksena "start" (vasen puoli)
+        this.arriveSide = (data && data.arriveSide) || 'start'; // kertoo mistä pelaaja tulee huoneeseen, oletuksena "start" (vasen puoli)
         this.room = ROOMS[this.roomIndex]; // valitsee huoneen datan, jonka jälkeen create() rakentaa huoneen sen perusteella
         this.isFinalGate = this.roomIndex === ROOMS.length - 1; // tarkistaa onko pelaaja viimeisessä huoneessa
 
         this.changingRoom = false; 
         this.hiding = false; 
+        this.hidingCloset = null; // missä kaapissa pelaaja on piilossa
         this.key = null;
         this.backDoor = null;
         this.messageTimer = null;
+        this.lastCause = 'unknown'; // mikä viimeksi satutti pelaajaa, game over -ruutu käyttää tätä
     }
 
     create() {
@@ -54,11 +57,20 @@ export default class RoomScene extends Phaser.Scene {
         this.heartsText = this.add.text(GAME_WIDTH - 20, 4, '', {
             fontFamily: 'Arial', fontSize: '30px', color: '#ff5252'
         }).setOrigin(1, 0).setDepth(30);
-        this.messageText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20, '', {
-            fontFamily: 'Arial', fontSize: '22px', color: '#ffd54f'
-        }).setOrigin(0.5).setDepth(30);
 
-     
+        // puhekupla: pelaajan ajatukset näkyy pelaajan pään päällä ja seuraa pelaajaa
+        this.messageText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '', {
+            fontFamily: 'Arial', fontSize: '22px', fontStyle: 'italic', color: '#ffffff',
+            backgroundColor: 'rgba(0, 0, 0, 0.75)', padding: { x: 12, y: 8 },
+            wordWrap: { width: 460 }, align: 'center'
+        }).setOrigin(0.5, 1).setDepth(30).setVisible(false);
+
+        if (this.roomIndex === 0) { // ohjevihje vain huoneessa 1
+            this.add.text(20, 38, TEXTS.controlsHint, {
+                fontFamily: 'Arial', fontSize: '18px', color: '#9e9e9e'
+            }).setDepth(30);
+        }
+
         this.updateHud(); 
 
         this.rush = new Rush(this, this.room.rush);
@@ -76,7 +88,9 @@ export default class RoomScene extends Phaser.Scene {
         }
 
         this.input.keyboard.on('keydown-E', () => this.toggleHide());
-        this.input.keyboard.on('keydown-ZERO', () => this.scene.start('FinalRoomScene')); // TESTI !!!! POISTA
+
+        // TEMPORARY: paina 0 niin hyppäät suoraan viimeiseen huoneeseen testausta varten, poistetaan ennen palautusta
+        this.input.keyboard.on('keydown-ZERO', () => this.scene.start('FinalRoomScene'));
     }
 
     // -----------------------------------------------------------
@@ -145,14 +159,13 @@ export default class RoomScene extends Phaser.Scene {
         }
     }
 
-    createEyes() {
-        this.eyes = (this.room.eyes || []).map((data) => new Eyes(this, data));
+    createEyes() { // tekee yhden Eyes-olion jokaista huoneen eyes-listan alkiota kohden
+        this.eyes = (this.room.eyes || []).map((data) => new Eyes(this, data)); // jos huoneessa ei ole silmiä, lista on tyhjä
     }
 
-    eyesBusy() {
+    eyesBusy() { // true jos jotkut silmät varoittaa tai on auki, rush kysyy tätä
         return this.eyes.some((e) => e.isBusy());
     }
-
 
     getSpawn() { // määritellään spawn point, taka vai etuovi
         if (this.arriveSide === 'right') {
@@ -164,12 +177,9 @@ export default class RoomScene extends Phaser.Scene {
         return this.room.playerStart;
     }
 
-
-
 // -----------------------------------------------------------
 //                      PELAAJAN TOIMINNOT
 // -----------------------------------------------------------
-
 
     collectKey() { // kun pelaaja kerää avaimen, se poistetaan näkyvistä ja HUD päivittyy
         const s = gameState.roomState(this.roomIndex);
@@ -179,7 +189,7 @@ export default class RoomScene extends Phaser.Scene {
         this.key.destroy();
         this.updateDoorColor();
         this.updateHud();
-        this.showMessage('You got the key!');
+        this.showMessage(TEXTS.key);
     }
     
     collectNearbyPickups() { // tarkistaa onko pelaaja tarpeeksi lähellä esinettä, jos on -> kerätään se
@@ -195,10 +205,10 @@ export default class RoomScene extends Phaser.Scene {
 
         if (pickup.kind === 'object') {
             s.object = true;
-            this.showMessage('you found an object.');
+            this.showMessage(TEXTS.object);
         } else {
             s.note = true;
-            this.showMessage('you found a note. might be useful later...');
+            this.showMessage(TEXTS.note);
         }
 
         pickup.destroy();
@@ -209,10 +219,10 @@ export default class RoomScene extends Phaser.Scene {
     toggleHide() { // pelaaja voi piiloutua kaappiin, jos on tarpeeksi lähellä sitä
         if (this.changingRoom) return;
 
-        if (this.hiding) {
+        if (this.hiding) { // ulos kaapista
             this.hiding = false;
+            this.hidingCloset = null;
             this.player.setVisible(true);
-            this.clearMessage();
             return;
         }
 
@@ -220,11 +230,10 @@ export default class RoomScene extends Phaser.Scene {
         if (!closet) return;
 
         this.hiding = true;
+        this.hidingCloset = closet; // muistetaan mikä kaappi, jotta sen teksti voidaan vaihtaa
         this.player.body.reset(closet.x, closet.y);
         this.player.setVisible(false);
-        this.showMessage('Hiding... press E to come out', 0);
     }
-
 
 // -----------------------------------------------------------
 //                      OVET JA HUONEET
@@ -244,27 +253,23 @@ export default class RoomScene extends Phaser.Scene {
         this.door.setFillStyle(this.canOpenExit() ? 0x66bb6a : 0x8d6e63);
     }
 
-    missingMessage() { // jos kaikkia kamoja ei ole, kerrotaan vain että kaikki pitää löytää
-        return "The final door won't open. You must find all the objects and notes first.";
-    }
-
     onDoorTouched() { // kun pelaaja koskee ovee, tarkistetaan sen kamat
         if (this.changingRoom) return;
 
         if (!gameState.roomState(this.roomIndex).key) {
-            this.showMessage('The door is locked. You must find the key first.', 2500);
+            this.showMessage(TEXTS.doorLocked, 2500);
             return;
         }
 
         if (!this.canOpenExit()) {
-            this.showMessage(this.missingMessage(), 3000);
+            this.showMessage(TEXTS.gateLocked, 3000);
             return;
         }
 
         if (this.isFinalGate) { // kaikki kerätty -> viimeinen huone, ovi lukittuu perässä
             this.changingRoom = true;
             this.player.body.setVelocity(0, 0);
-            this.showMessage('The door locks behind you...', 0);
+            this.showMessage(TEXTS.gateClosing, 0);
 
             this.cameras.main.fadeOut(700, 0, 0, 0);
             this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
@@ -291,17 +296,15 @@ export default class RoomScene extends Phaser.Scene {
         });
     }
 
-
-
 // -----------------------------------------------------------
 //                      DAMAGE JA GAME OVER
 // -----------------------------------------------------------  
 
-
-
-    hurtPlayer() {
+    hurtPlayer(cause = 'unknown') { // cause kertoo mikä satutti: 'rush', 'screech' tai 'eyes'
         if (this.changingRoom) return; // jos huonetta vaihdetaan, ei oteta damagee
         if (!this.health.takeDamage()) return; // jos pelaaja on invulnerable tai kuollut, ei oteta damagee
+
+        this.lastCause = cause; // muistetaan syy, viimeinen osuma ratkaisee mitä game over näyttää
 
         this.updateHud();
         this.cameras.main.shake(150, 0.01);
@@ -328,15 +331,13 @@ export default class RoomScene extends Phaser.Scene {
 
         this.cameras.main.fadeOut(600, 0, 0, 0);
         this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-            this.scene.start('GameOverScene', { roomIndex: this.roomIndex });
+            this.scene.start('GameOverScene', { roomIndex: this.roomIndex, cause: this.lastCause });
         });
     }
 
-
     // -----------------------------------------------------------
-    //                           HUD
+    //                      HUD JA PUHEKUPLA
     // -----------------------------------------------------------      
-
 
     updateHud() {
         const s = gameState.roomState(this.roomIndex); // päivitetään HUD
@@ -349,20 +350,29 @@ export default class RoomScene extends Phaser.Scene {
         this.heartsText.setText(full + empty);
     }
 
-    showMessage(text, duration = 1500) { // näytetään pelaajalle teksti, esim. kun hän kerää avaimen
-        this.messageText.setText(text);
-        if (this.messageTimer) this.messageTimer.remove(false); // jos on jo teksti, poistetaan se ennen uuden näyttämistä
-        if (duration > 0) {
-            this.messageTimer = this.time.delayedCall(duration, () => this.messageText.setText('')); // teksti poistetaan tietyn ajan kuluttua
+    showMessage(text, duration = 3500) { // näytetään pelaajan ajatus puhekuplassa, esim. kun hän kerää avaimen
+        this.messageText.setText(text).setVisible(text !== ''); // tyhjää tekstiä ei näytetä
+        this.positionBubble(); // asetetaan heti oikeaan paikkaan, ettei kupla välähdä väärässä kohdassa
+        if (this.messageTimer) this.messageTimer.remove(false); // jos on jo teksti, poistetaan vanha ajastin
+        if (duration > 0) { // 0 = teksti pysyy kunnes se poistetaan
+            this.messageTimer = this.time.delayedCall(Math.max(duration, 2500), () => this.clearMessage()); // jokainen kupla näkyy vähintään 2,5 s
         }
     }
 
     clearMessage() { 
         if (this.messageTimer) this.messageTimer.remove(false);
-        this.messageText.setText('');
+        this.messageText.setText('').setVisible(false);
     }
-    
-    
+
+    positionBubble() { // kupla pelaajan pään päälle (tai kaapin päälle kun pelaaja piilossa), pysyy ruudun sisällä
+        if (!this.player || !this.messageText.visible) return;
+
+        const half = this.messageText.width / 2 + 10;
+        const x = Phaser.Math.Clamp(this.player.x, half, GAME_WIDTH - half); // ei mene ruudun sivuille
+        const offset = this.hiding ? 62 : 30; // kaappi on korkeampi kuin pelaaja
+        const y = Math.max(this.player.y - offset, this.messageText.height + 60); // ei mene HUD:n päälle
+        this.messageText.setPosition(x, y);
+    }
 
     update() { // pelin update loop, tarkistetaan pelaajan liikkuminen, kerätyt esineet ja kaappiin piiloutuminen
         if (this.changingRoom) return;
@@ -375,9 +385,17 @@ export default class RoomScene extends Phaser.Scene {
 
         if (!this.hiding) this.collectNearbyPickups();
 
-        this.closets.forEach((c) => c.setPromptVisible(!this.hiding && c.isNear(this.player)));
+        this.closets.forEach((c) => { // kaapin teksti: piilossa ollessa vain sen kaapin päällä lukee "E: come out"
+            if (this.hiding) {
+                c.setPrompt('E: come out', c === this.hidingCloset);
+            } else {
+                c.setPrompt('E: hide', c.isNear(this.player));
+            }
+        });
         this.rush.update();
         if (this.screech) this.screech.update(); // screech tarkistaa piiloutuiko pelaaja
         this.eyes.forEach((e) => e.update()); // jokainen silmäpari tarkistaa liikkuuko pelaaja
+
+        this.positionBubble(); // kupla seuraa pelaajaa
     }
 }

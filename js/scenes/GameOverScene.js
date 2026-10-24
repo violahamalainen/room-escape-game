@@ -1,4 +1,5 @@
-import { GAME_WIDTH, MAX_HEARTS } from '../config.js';
+import { GAME_WIDTH } from '../config.js';
+import { TEXTS } from '../data/texts.js';
 import gameState from '../systems/GameState.js';
 import { createButton, fadeToScene } from '../systems/UI.js';
 
@@ -9,25 +10,37 @@ export default class GameOverScene extends Phaser.Scene {
 
     init(data) {
         this.roomIndex = (data && data.roomIndex) || 0; 
+        this.cause = (data && data.cause) || 'unknown'; // mikä pelaajan tappoi, RoomScene lähettää tämän mukana
         this.leaving = false; 
     }
 
     create() { // luodaan game over scene, pelaaja voi yrittää peliä uudelleen
         this.cameras.main.fadeIn(500, 0, 0, 0);
 
-        this.add.text(GAME_WIDTH / 2, 210, 'GAME OVER', {
+        const info = TEXTS.death[this.cause] || TEXTS.death.unknown; // jos syytä ei tunneta, käytetään yleistä tekstiä
+        console.log('cause:', this.cause); // väliaikainen testi, poista kun toimii
+
+        this.add.text(GAME_WIDTH / 2, 130, 'GAME OVER', {
             fontFamily: 'Arial', fontSize: '80px', color: '#ff5252'
         }).setOrigin(0.5);
 
-        this.add.text(GAME_WIDTH / 2, 300, `attempt ${gameState.tries} ended. you were caught in room ${this.roomIndex + 1}`, {
-            fontFamily: 'Arial', fontSize: '28px', color: '#ffffff'
+        this.add.text(GAME_WIDTH / 2, 240, info.title, { // esim. "You died to Rush."
+            fontFamily: 'Arial', fontSize: '36px', color: '#ffffff'
         }).setOrigin(0.5);
 
-        this.add.text(GAME_WIDTH / 2, 345, 'everything you collected is lost.', {
+        this.add.text(GAME_WIDTH / 2, 295, info.tip, { // vinkki miten selvitä ensi kerralla
+            fontFamily: 'Arial', fontSize: '26px', color: '#ffd54f', wordWrap: { width: 900 }, align: 'center'
+        }).setOrigin(0.5);
+
+        this.add.text(GAME_WIDTH / 2, 365, `attempt ${gameState.tries} ended in room ${this.roomIndex + 1}`, {
             fontFamily: 'Arial', fontSize: '22px', color: '#bbbbbb'
         }).setOrigin(0.5);
 
-        const button = this.add.text(GAME_WIDTH / 2, 440, 'Try again', {
+        this.add.text(GAME_WIDTH / 2, 400, 'everything you collected is lost.', {
+            fontFamily: 'Arial', fontSize: '20px', color: '#999999'
+        }).setOrigin(0.5);
+
+        const button = this.add.text(GAME_WIDTH / 2, 490, 'Try again', {
             fontFamily: 'Arial',
             fontSize: '40px',
             color: '#ffffff',
@@ -39,12 +52,12 @@ export default class GameOverScene extends Phaser.Scene {
         button.on('pointerout', () => button.setStyle({ backgroundColor: '#444444' }));
         button.on('pointerdown', () => this.tryAgain());
 
-        this.add.text(GAME_WIDTH / 2, 520, 'or press Enter', {
+        this.add.text(GAME_WIDTH / 2, 550, 'or press Enter', {
             fontFamily: 'Arial', fontSize: '20px', color: '#999999'
         }).setOrigin(0.5);
 
-        createButton(this, GAME_WIDTH / 2, 610, 'Main menu', () => fadeToScene(this, 'MenuScene'), 28);
-        this.add.text(GAME_WIDTH / 2, 668, 'Leaving ends this run. It will not be on the scoreboard.', {
+        createButton(this, GAME_WIDTH / 2, 620, 'Main menu', () => fadeToScene(this, 'MenuScene'), 28);
+        this.add.text(GAME_WIDTH / 2, 675, 'Leaving ends this run. It will not be on the scoreboard.', {
             fontFamily: 'Arial', fontSize: '18px', color: '#888888'
         }).setOrigin(0.5);
 

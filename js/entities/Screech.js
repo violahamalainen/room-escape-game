@@ -1,4 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
+import { TEXTS } from '../data/texts.js';
 
 const WARNING_MS = 700;  // varoitus ennenkuin hirviö ilmestyy
 
@@ -32,7 +33,7 @@ export default class Screech {
         }
 
         this.scene.cameras.main.flash(250, 255, 0, 0);
-        this.scene.showMessage('You hear a screech...', WARNING_MS);
+        this.scene.showMessage('TEXTS.screechWarning', WARNING_MS);
         this.scene.time.delayedCall(WARNING_MS, () => this.appear()); // varotuksen jälkeen kutsutaan appear()
     }
 
@@ -52,7 +53,6 @@ export default class Screech {
 
         this.createCreature(spot.x, spot.y); 
         this.active = true;
-        this.scene.showMessage('Screech! Click it!', this.settings.reactMs);
         this.timeout = this.scene.time.delayedCall(this.settings.reactMs, () => this.missed());
     }
 
@@ -111,7 +111,7 @@ export default class Screech {
         this.timeout.remove(false); // lopettaa "liian hidas" ajastimen
         this.active = false;
         this.removeCreature(true); // ajaa hirviö katoaa animaation
-        this.scene.showMessage('Banished!', 900);
+        this.scene.showMessage(TEXTS.screechBanished, 900);
         this.scheduleNext(this.nextGap());
     }
 
@@ -120,8 +120,8 @@ export default class Screech {
         this.removeCreature(false);
 
         if (!this.scene.changingRoom && !this.scene.hiding) {
-            this.scene.hurtPlayer();
-            this.scene.showMessage('Too slow!', 1200);
+            this.scene.hurtPlayer('screech');
+            this.scene.showMessage(TEXTS.screechMissed, 1200);
         }
 
         this.scheduleNext(this.nextGap());

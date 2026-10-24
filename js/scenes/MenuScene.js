@@ -43,8 +43,10 @@ export default class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         this.startButton = createButton(this, GAME_WIDTH / 2, 450, 'Start game', () => this.startGame());
-        createButton(this, GAME_WIDTH / 2, 535, 'Scoreboard', () => fadeToScene(this, 'ScoreboardScene'));
-        createButton(this, GAME_WIDTH / 2, 620, 'Settings', () => fadeToScene(this, 'SettingsScene'));
+        // kolme pienempää nappia samalla rivillä
+        createButton(this, GAME_WIDTH / 2 - 260, 560, 'How to play', () => fadeToScene(this, 'HowToPlayScene'), 28);
+        createButton(this, GAME_WIDTH / 2, 560, 'Scoreboard', () => fadeToScene(this, 'ScoreboardScene'), 28);
+        createButton(this, GAME_WIDTH / 2 + 240, 560, 'Settings', () => fadeToScene(this, 'SettingsScene'), 28);
 
         this.refreshStartButton();
     }

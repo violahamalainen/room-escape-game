@@ -215,7 +215,7 @@ export default class FinalRoomScene extends Phaser.Scene {
 
         this.cameras.main.fadeOut(800, 0, 0, 0);
         this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-            this.scene.start('GameOverScene', { roomIndex: ROOMS.length }); // näytetään "Room 5"
+        this.scene.start('GameOverScene', { roomIndex: ROOMS.length, cause: 'time' }); // näytetään "Room 5" // näytetään "Room 5"
         });
     }
 

@@ -15,7 +15,8 @@ export default class Closet {
         return Phaser.Math.Distance.Between(player.x, player.y, this.x, this.y) < 70; // onko pelaaja tarpeeksi lähellä kaappia?
     }
 
-    setPromptVisible(visible) { // näytetään tai piilotetaan teksti
+    setPrompt(text, visible) { // vaihtaa kaapin päällä olevan tekstin ("E: hide" tai "E: come out") ja näyttää tai piilottaa sen
+        this.prompt.setText(text);
         this.prompt.setVisible(visible);
     }
 }

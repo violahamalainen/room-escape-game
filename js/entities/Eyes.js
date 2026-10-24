@@ -1,3 +1,5 @@
+import { TEXTS } from '../data/texts.js';
+
 const LOOKS = { // silmien ulkonäkö
     closed:  { color: 0x555555, scaleY: 0.12, zoneAlpha: 0 },
     warning: { color: 0xffd54f, scaleY: 0.55, zoneAlpha: 0.06 },
@@ -64,7 +66,7 @@ export default class Eyes {
         this.state = 'warning';
         this.setLook('warning'); // silmät aukeaa puoliksi keltaisena
         if (!this.scene.hiding) { // ei poisteta "Hiding..." tekstiä jos pelaaja on kaapissa
-            this.scene.showMessage('The eyes are opening... get ready to freeze!', this.data.warnMs);
+            this.scene.showMessage(TEXTS.eyesWarning, this.data.warnMs);
         }
         this.scene.time.delayedCall(this.data.warnMs, () => this.open());
     }
@@ -78,7 +80,7 @@ export default class Eyes {
         this.hitThisOpening = false; // uusi avautuminen, voi osua taas kerran
         this.setLook('open'); // silmät auki punaisena
         if (!this.scene.hiding) {
-            this.scene.showMessage('Freeze! Do not move!', openFor);
+            this.scene.showMessage(TEXTS.eyesOpen, openFor);
         }
         this.scene.time.delayedCall(openFor, () => this.close());
     }
@@ -107,8 +109,8 @@ export default class Eyes {
 
         if (s.player.isTryingToMove()) { // liikkui silmien ollessa auki
             this.hitThisOpening = true;
-            s.hurtPlayer(); // sama damage-funktio kuin rushilla ja screechillä
-            s.showMessage('It saw you move!', 1200);
+            s.hurtPlayer('eyes'); // sama damage-funktio kuin rushilla ja screechillä
+            s.showMessage(TEXTS.eyesSaw, 1200);
         }
     }
 }

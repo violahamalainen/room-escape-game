@@ -7,6 +7,7 @@ import RoomScene from './scenes/RoomScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
 import FinalRoomScene from './scenes/FinalRoomScene.js';
 import WinScene from './scenes/WinScene.js';
+import HowToPlayScene from './scenes/HowToPlayScene.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -23,7 +24,7 @@ const config = {
         default: 'arcade',
         arcade: { debug: false }
     },
-    scene: [BootScene, MenuScene, ScoreboardScene, SettingsScene, RoomScene, GameOverScene, FinalRoomScene, WinScene]
+    scene: [BootScene, MenuScene, HowToPlayScene, ScoreboardScene, SettingsScene, RoomScene, GameOverScene, FinalRoomScene, WinScene]
 };
 
 new Phaser.Game(config);

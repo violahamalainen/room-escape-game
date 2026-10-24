@@ -1,4 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
+import { TEXTS } from '../data/texts.js';
 
 export default class Rush { // odota, varota, hyökkää, odota...
     constructor(scene, settings) { // säilyttää scene ja room asetukset, luo hyökkäyksen overlayn ja rungon, aikatauluttaa ensimmäisen hyökkäyksen
@@ -29,7 +30,7 @@ export default class Rush { // odota, varota, hyökkää, odota...
         }
         this.busy = true; // rush alkaa, silmät ei saa nyt avautua
 
-        this.scene.showMessage('The lights flicker... hide! (E)', this.settings.warningMs);
+          this.scene.showMessage(TEXTS.rushWarning2, this.settings.warningMs);
 
         this.flickerEvent = this.scene.time.addEvent({ 
             delay: 90, 
@@ -69,7 +70,7 @@ export default class Rush { // odota, varota, hyökkää, odota...
         this.busy = false; // rush ohi, silmät saa avautua
 
         if (this.scene.hiding) { // poista nääki paskat
-            this.scene.showMessage('It has passed. Press E to come out.', 0);
+            this.scene.showMessage(TEXTS.rushPassedHiding, 3000);
         }
 
         const gap = Phaser.Math.Between(this.settings.minGapMs, this.settings.maxGapMs); // seuraava hyökkäys aikataulutetaan satunnaisen ajan kuluttua
@@ -84,7 +85,7 @@ export default class Rush { // odota, varota, hyökkää, odota...
 
         if (Phaser.Geom.Intersects.RectangleToRectangle(playerBounds, rushBounds)) { 
             this.hitThisPass = true;
-            this.scene.hurtPlayer(); // pelaaja ottaa damagee kun hyökkäys osuu häneen
+            this.scene.hurtPlayer('rush'); // pelaaja ottaa damagee kun hyökkäys osuu häneen, kerrotaan mikä satutti
         }
     }
 }
