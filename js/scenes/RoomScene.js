@@ -10,6 +10,7 @@ import gameState from '../systems/GameState.js';
 import Screech from '../entities/Screech.js';
 import Eyes from '../entities/Eyes.js';
 import Director from '../systems/Director.js';
+import { buildFloor, paintWall, addDecor } from '../systems/Art.js';
 
 const WALL = 40;
 
@@ -39,7 +40,8 @@ export default class RoomScene extends Phaser.Scene {
         gameState.startClock(); // kello käy vain kun pelaaja on huoneessa
         this.events.once('shutdown', () => gameState.stopClock()); // kello pysähtyy kun scene päättyy
 
-        this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, this.room.floorColor);
+        buildFloor(this, this.room.floorColor); // lattia kuvana, huoneen väri läpinäkyvänä päällä
+        addDecor(this); // soihdut ja kynttilät
 
         this.walls = this.physics.add.staticGroup(); // seinät ei liiku (staticGroup)
         this.buildBorder();
@@ -126,7 +128,9 @@ export default class RoomScene extends Phaser.Scene {
 
     addWall(x, y, width, height) { 
         const wall = this.add.rectangle(x, y, width, height, 0x6d6d6d);
+        wall.setVisible(false); // fysiikkalaatikko jää, mutta sitä ei piirretä
         this.walls.add(wall);
+        paintWall(this, x, y, width, height); // seinän kuva samaan kohtaan
     }
 
     createDoors() { // määritellään ovi ja mahdollinen takaovi

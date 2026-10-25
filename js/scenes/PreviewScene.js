@@ -8,7 +8,7 @@ const SHEET72 = 'dungeonSheet';
 const WALL = 64;    // seinän paksuus testihuoneessa
 const SPEED = 170;  // pelaajan nopeus testihuoneessa
 const PLAYER_SCALES = [2, 3];
-const SZADI_SCALES = [1, 2];
+const SZADI_SCALES = [1, 2, 3];
 
 // Szadin erilliset kuvatiedostot (torch ja candle ovat animaatioita)
 const TORCH = ['torch_1', 'torch_2', 'torch_3', 'torch_4'];
@@ -35,7 +35,8 @@ const CHARACTERS = [
     { name: 'knight_f', y: 68 }, { name: 'knight_m', y: 100 },
     { name: 'wizard_f', y: 132 }, { name: 'wizard_m', y: 164 },
     { name: 'lizard_f', y: 196 }, { name: 'lizard_m', y: 228 },
-    { name: 'dwarf_f', y: 260 }, { name: 'dwarf_m', y: 292 }
+    { name: 'dwarf_f', y: 260 }, { name: 'dwarf_m', y: 292 },
+    { name: 'doc', y: 345, x: 368, runX: 432, h: 23 } // tohtori: eri kohdassa kuvaa ja 23 px korkea
 ];
 
 export default class PreviewScene extends Phaser.Scene {
@@ -95,8 +96,8 @@ export default class PreviewScene extends Phaser.Scene {
 
         CHARACTERS.forEach((c) => {
             for (let i = 0; i < 4; i++) {
-                t72.add(`${c.name}_idle_${i}`, 0, 128 + i * 16, c.y, 16, 28);
-                t72.add(`${c.name}_run_${i}`, 0, 192 + i * 16, c.y, 16, 28);
+                t72.add(`${c.name}_idle_${i}`, 0, (c.x || 128) + i * 16, c.y, 16, c.h || 28);
+                t72.add(`${c.name}_run_${i}`, 0, (c.runX || 192) + i * 16, c.y, 16, c.h || 28);
             }
             ['idle', 'run'].forEach((kind) => {
                 const key = `${c.name}_${kind}`;
@@ -186,6 +187,7 @@ export default class PreviewScene extends Phaser.Scene {
     buildPlayer() {
         const ch = CHARACTERS[this.charIndex];
         this.charName = ch.name;
+        this.charHeight = ch.h || 28; // hahmon korkeus pikseleinä, tohtori on matalampi
         this.player = this.add.sprite(GAME_WIDTH / 2, GAME_HEIGHT / 2, SHEET72, `${ch.name}_idle_0`);
         this.player.setScale(this.playerScale).setDepth(5).play(`${ch.name}_idle`);
 
@@ -222,7 +224,7 @@ export default class PreviewScene extends Phaser.Scene {
             const len = Math.hypot(dx, dy); // viistoon ei liikuta nopeammin
             const step = SPEED * delta / 1000;
             const halfW = (16 * this.playerScale) / 2;
-            const halfH = (28 * this.playerScale) / 2;
+            const halfH = (this.charHeight * this.playerScale) / 2;
             this.player.x = Phaser.Math.Clamp(this.player.x + (dx / len) * step, WALL + halfW, GAME_WIDTH - WALL - halfW);
             this.player.y = Phaser.Math.Clamp(this.player.y + (dy / len) * step, WALL + halfH, GAME_HEIGHT - WALL - halfH);
             if (dx !== 0) this.player.setFlipX(dx < 0);
