@@ -1,7 +1,7 @@
 export const ROOMS = [
     {
         name: 'Room 1',
-        floorColor: 0x2b2b2b,
+        floorColor: 0x3b2f2a, //0x2b2b2b,
         quietMs: 6000, // hiljainen väli tapahtumien välillä
         playerStart: { x: 120, y: 360 },
         door: { y: 360, height: 120 },
@@ -34,7 +34,7 @@ export const ROOMS = [
     },
     {
         name: 'Room 3',
-        floorColor: 0x2a2a35,
+        floorColor: 0x2f3b2d, //0x2a2a35,
         quietMs: 4000,
         playerStart: { x: 120, y: 360 },
         door: { y: 360, height: 120 },
@@ -58,7 +58,7 @@ export const ROOMS = [
     },
     {
         name: 'Room 4',
-        floorColor: 0x2e2430,
+        floorColor: 0x4a2430, //0x2e2430,
         quietMs: 3500,
         playerStart: { x: 120, y: 360 },
         door: { y: 360, height: 120 },
@@ -80,3 +80,7 @@ export const ROOMS = [
         ]
     }
 ];
+
+
+
+

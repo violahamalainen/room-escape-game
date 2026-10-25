@@ -210,10 +210,11 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
     update() {   // tarkistetaan osuiko hyökkäys pelaajaan
         if (!this.active) return;
 
-        this.body.x = this.mist.x; // osumalaatikko seuraa sumua
+        this.body.x = this.mist.x; // hitbox seuraa sumua
         if (this.hitThisPass || this.scene.hiding) return; 
 
-        const playerBounds = this.scene.player.getBounds(); 
+        const body = this.scene.player.body; // hitbox on jalkojen kohdalla, ei koko hahmokuva
+        const playerBounds = new Phaser.Geom.Rectangle(body.x, body.y, body.width, body.height); 
         const rushBounds = this.body.getBounds(); 
 
         if (Phaser.Geom.Intersects.RectangleToRectangle(playerBounds, rushBounds)) { 

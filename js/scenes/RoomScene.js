@@ -377,7 +377,7 @@ export default class RoomScene extends Phaser.Scene {
 
         const half = this.messageText.width / 2 + 10;
         const x = Phaser.Math.Clamp(this.player.x, half, GAME_WIDTH - half); // ei mene ruudun sivuille
-        const offset = this.hiding ? 62 : 30; // kaappi on korkeampi kuin pelaaja
+        const offset = this.hiding ? 62 : 52; // kaappi on korkeampi kuin pelaaja
         const y = Math.max(this.player.y - offset, this.messageText.height + 60); // ei mene HUD:n päälle
         this.messageText.setPosition(x, y);
     }
