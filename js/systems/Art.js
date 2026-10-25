@@ -154,7 +154,7 @@ export function drawKey(scene, x, y) {
     return { destroy: () => { bob.stop(); key.destroy(); } }; // pysäytetään leijuminen ennen poistoa
 }
 
-const DOOR_TINT_ALPHA = 0.35; // kuinka vahva punainen sävy lukitun oven päällä on (0 = ei lainkaan)
+const DOOR_TINT_ALPHA = 0.1; // kuinka vahva punainen sävy lukitun oven päällä on (0 = ei lainkaan)
 const SHOW_LOCK = true;       // false = ei riippulukkoa oven päällä
 
 // ovi seinän aukossa: pala samaa seinäruutua kuin seinät, punainen sävy ja riippulukko, ja niiden alla pimeä aukko

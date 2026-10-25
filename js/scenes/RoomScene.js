@@ -12,6 +12,7 @@ import Eyes from '../entities/Eyes.js';
 import Director from '../systems/Director.js';
 import { buildFloor, paintWall, addDecor, drawKey, buildDoorArt } from '../systems/Art.js';
 import { createHearts } from '../systems/Hud.js';
+import { createLowHealth } from '../systems/LowHealth.js';
 
 const WALL = 40;
 
@@ -63,6 +64,7 @@ export default class RoomScene extends Phaser.Scene {
             fontFamily: 'Arial', fontSize: '22px', color: '#ffffff'
         }).setDepth(30);
         this.hearts = createHearts(this); // sydämet kuvina oikeassa yläkulmassa
+        this.lowHealth = createLowHealth(this); // punainen reunahehku kun sydämiä on vähän
 
         // puhekupla: pelaajan ajatukset näkyy pelaajan pään päällä ja seuraa pelaajaa
         this.messageText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '', {
@@ -361,6 +363,7 @@ export default class RoomScene extends Phaser.Scene {
             `Room ${this.roomIndex + 1} of ${ROOMS.length}   Key: ${s.key ? 'yes' : 'no'}   Try ${gameState.tries}`
         );
         this.hearts.set(this.health.hearts); // päivittää sydänkuvat
+        this.lowHealth.set(this.health.hearts); // hehku päälle kun on enää yksi sydän
     }
 
     showMessage(text, duration = 3500) { // näytetään pelaajan ajatus puhekuplassa, esim. kun hän kerää avaimen
