@@ -10,7 +10,7 @@ import gameState from '../systems/GameState.js';
 import Screech from '../entities/Screech.js';
 import Eyes from '../entities/Eyes.js';
 import Director from '../systems/Director.js';
-import { buildFloor, paintWall, addDecor } from '../systems/Art.js';
+import { buildFloor, paintWall, addDecor, drawKey } from '../systems/Art.js';
 
 const WALL = 40;
 
@@ -29,6 +29,7 @@ export default class RoomScene extends Phaser.Scene {
         this.hiding = false; 
         this.hidingCloset = null; // missä kaapissa pelaaja on piilossa
         this.key = null;
+        this.keyArt = null; // avaimen piirretty kuva
         this.backDoor = null;
         this.messageTimer = null;
         this.lastCause = 'unknown'; // mikä viimeksi satutti pelaajaa, game over -ruutu käyttää tätä
@@ -151,7 +152,9 @@ export default class RoomScene extends Phaser.Scene {
 
         const k = this.room.key;
         this.key = this.add.rectangle(k.x, k.y, 22, 22, 0xffd54f);
+        this.key.setVisible(false); // fysiikkalaatikko jää, mutta sitä ei piirretä
         this.physics.add.existing(this.key, true);
+        this.keyArt = drawKey(this, k.x, k.y); // piirretty avain leijuu samassa paikassa
     }
 
     createClosets() { 
@@ -195,6 +198,7 @@ export default class RoomScene extends Phaser.Scene {
 
         s.key = true;
         this.key.destroy();
+        this.keyArt.destroy(); // piirretty avain pois
         this.updateDoorColor();
         this.updateHud();
         this.showMessage(TEXTS.key);

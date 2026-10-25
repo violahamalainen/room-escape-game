@@ -8,6 +8,15 @@ const CANDLE_A = ['candleA_01', 'candleA_02', 'candleA_03', 'candleA_04'];
 const CANDLE_B = ['candleB_01', 'candleB_02', 'candleB_03', 'candleB_04'];
 const TORCH_X = [520, 760, 960]; // soihtujen paikat yläseinällä, HUD-teksti jää vasemmalle ja sydämet oikealle
 
+// 0x72:n yksittäiset kuvat tiedostosta tile_list_v1.7: nimi: [x, y, leveys, korkeus]
+const FRAMES_72 = {
+    crate: [288, 408, 16, 24],
+    flask_big_red: [288, 336, 16, 16],
+    flask_big_blue: [304, 336, 16, 16],
+    flask_big_green: [320, 336, 16, 16],
+    flask_big_yellow: [336, 336, 16, 16]
+};
+
 // ladataan kaikki kuvat kerran pelin alussa (BootScene kutsuu tätä)
 export function loadArt(scene) {
     scene.load.image('szadiMain', `${CATACOMBS}mainlevbuild.png`);
@@ -28,6 +37,9 @@ export function prepareArt(scene) {
     const w = ART.szadiWall;
     if (f) main.add('szadiFloor', 0, f.x, f.y, f.w, f.h); // lattiaruudun palanen
     if (w) main.add('szadiWall', 0, w.x, w.y, w.w, w.h);  // seinäruudun palanen
+
+    const sheet = scene.textures.get('dungeonSheet');
+    Object.entries(FRAMES_72).forEach(([name, [x, y, w2, h]]) => sheet.add(name, 0, x, y, w2, h)); // laatikko ja pullot nimellä
 
     makeAnim(scene, 'torch', TORCH, 8);
     makeAnim(scene, 'candleA', CANDLE_A, 6);
@@ -93,6 +105,25 @@ export function paintWall(scene, cx, cy, w, h) {
     fillArea(scene, 'szadiMain', 'szadiWall', Math.round(cx - w / 2), Math.round(cy - h / 2), w, h, 1);
 }
 
+// liikkuva seinä: kuvapaloista koottu container, jonka voi siirtää yhtenä kappaleena (x ja y = vasen yläkulma)
+export function buildWallBlock(scene, w, h, depth) {
+    const block = scene.add.container(0, 0).setDepth(depth);
+    const frame = scene.textures.getFrame('szadiMain', 'szadiWall');
+    const tw = frame.width * ART_SCALE;
+    const th = frame.height * ART_SCALE;
+
+    for (let yy = 0; yy < h; yy += th) {
+        for (let xx = 0; xx < w; xx += tw) {
+            const img = scene.add.image(xx, yy, 'szadiMain', 'szadiWall').setOrigin(0, 0).setScale(ART_SCALE);
+            const cropW = Math.min(tw, w - xx);
+            const cropH = Math.min(th, h - yy);
+            if (cropW < tw || cropH < th) img.setCrop(0, 0, cropW / ART_SCALE, cropH / ART_SCALE);
+            block.add(img); // kuva siirtyy containerin sisään
+        }
+    }
+    return block;
+}
+
 // soihdut yläseinälle ja kynttilät yläkulmiin, kaikki animoituja
 export function addDecor(scene) {
     scene.add.sprite(74, 100, 'candleA_01').setScale(ART_SCALE).setDepth(0).play('candleA');
@@ -101,4 +132,21 @@ export function addDecor(scene) {
     TORCH_X.forEach((x) => {
         scene.add.sprite(x, 24, 'torch_1').setScale(ART_SCALE).setDepth(2).play('torch');
     });
+}
+
+// koodilla piirretty kultainen avain, leijuu ja hohtaa. Palauttaa olion, jolla on destroy()
+export function drawKey(scene, x, y) {
+    const glow = scene.add.circle(0, 0, 24, 0xffd54f, 0.18); // kultainen hohto
+    const g = scene.add.graphics();
+    g.lineStyle(4, 0xffd54f, 1);
+    g.strokeCircle(-12, 0, 7);  // avaimen pää (rengas)
+    g.fillStyle(0xffd54f, 1);
+    g.fillRect(-5, -2, 26, 4);  // varsi
+    g.fillRect(14, 2, 4, 7);    // hammas
+    g.fillRect(21, 2, 4, 5);    // toinen hammas
+
+    const key = scene.add.container(x, y, [glow, g]).setDepth(3);
+    const bob = scene.tweens.add({ targets: key, y: y - 6, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+    return { destroy: () => { bob.stop(); key.destroy(); } }; // pysäytetään leijuminen ennen poistoa
 }

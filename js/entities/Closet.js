@@ -1,21 +1,26 @@
+import { ART_SCALE } from '../config.js';
+
+// piilopaikka: laatikko, jonka sisään pelaaja voi piiloutua
 export default class Closet {
-    constructor(scene, x, y) { 
-        this.x = x; // kaapin sijainti
-        this.y = y; 
+    constructor(scene, x, y) {
+        this.x = x;
+        this.y = y;
 
-        this.shape = scene.add.rectangle(x, y, 56, 90, 0x4e342e);
-        this.shape.setStrokeStyle(3, 0x8d6e63); 
+        this.crate = scene.add.image(x, y, 'dungeonSheet', 'crate'); // laatikon kuva 0x72-paketista
+        this.crate.setScale(ART_SCALE).setDepth(2);
 
-        this.prompt = scene.add.text(x, y - 65, 'E: hide', { // kun pelaaja on tarpeeksi lähellä kaappia, hän näkee tekstin, että voi piiloutua
-            fontFamily: 'Arial', fontSize: '20px', color: '#ffd54f'
-        }).setOrigin(0.5).setDepth(5).setVisible(false); 
+        const above = y > 120; // ylhäällä seinän vieressä olevan laatikon teksti tulee laatikon alapuolelle
+        this.prompt = scene.add.text(x, above ? y - 46 : y + 46, 'E: hide', {
+            fontFamily: 'Arial', fontSize: '20px', color: '#ffd54f',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)', padding: { x: 6, y: 2 }
+        }).setOrigin(0.5).setDepth(5).setVisible(false);
     }
 
-    isNear(player) {
-        return Phaser.Math.Distance.Between(player.x, player.y, this.x, this.y) < 70; // onko pelaaja tarpeeksi lähellä kaappia?
+    isNear(player) { // true jos pelaaja on tarpeeksi lähellä laatikkoa
+        return Phaser.Math.Distance.Between(player.x, player.y, this.x, this.y) < 70;
     }
 
-    setPrompt(text, visible) { // vaihtaa kaapin päällä olevan tekstin ("E: hide" tai "E: come out") ja näyttää tai piilottaa sen
+    setPrompt(text, visible) { // vaihtaa laatikon päällä olevan tekstin ("E: hide" tai "E: come out") ja näyttää tai piilottaa sen
         this.prompt.setText(text);
         this.prompt.setVisible(visible);
     }

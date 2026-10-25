@@ -1,32 +1,40 @@
-export function createShape(scene, data) {
-    switch (data.shape) { // luodaan esineen muoto sen mukaan, mikä on määritelty dataan
-        case 'square':
-            return scene.add.rectangle(data.x, data.y, 30, 30, data.color);
-        case 'triangle':
-            return scene.add.triangle(data.x, data.y, 0, 30, 15, 0, 30, 30, data.color);
-        case 'star':
-            return scene.add.star(data.x, data.y, 5, 9, 20, data.color);
-        default:
-            return scene.add.circle(data.x, data.y, 16, data.color);
-    }
+import { ART_SCALE } from '../config.js';
+
+// piirretty kääröpaperi, keskipiste on (0, 0)
+function drawScroll(scene) {
+    const g = scene.add.graphics();
+    g.fillStyle(0xf5f0dc, 1);
+    g.fillRect(-10, -12, 20, 24);  // paperi
+    g.fillStyle(0xcfc08f, 1);
+    g.fillRect(-12, -15, 24, 6);   // yläkääre
+    g.fillRect(-12, 9, 24, 6);     // alakääre
+    g.fillStyle(0x8a7a55, 1);
+    g.fillRect(-6, -4, 12, 2);     // tekstirivit
+    g.fillRect(-6, 1, 12, 2);
+    g.fillRect(-6, 6, 8, 2);
+    return g;
 }
 
+// esine (pullo) tai muistiinpano (käärö), leijuu ylös alas ja hohtaa
 export default class Pickup {
     constructor(scene, kind, data) {
-        this.kind = kind; // obect tai note
+        this.kind = kind;
         this.x = data.x;
         this.y = data.y;
 
+        const parts = []; // pickupin osat: hohto ja varsinainen kuva
         if (kind === 'object') {
-            this.shape = createShape(scene, data);
+            parts.push(scene.add.circle(0, 0, 24, data.color, 0.22)); // pullon värinen hohto
+            parts.push(scene.add.image(0, 0, 'dungeonSheet', `flask_big_${data.flask}`).setScale(ART_SCALE));
         } else {
-            this.shape = scene.add.rectangle(data.x, data.y, 26, 34, 0xf5f0dc);
+            parts.push(scene.add.circle(0, 0, 24, 0xf5f0dc, 0.18)); // vaalea hohto
+            parts.push(drawScroll(scene));
         }
 
-        this.shape.setStrokeStyle(2, 0xffffff);
+        this.shape = scene.add.container(data.x, data.y, parts); // container liikuttaa kaikkia osia yhdessä
         this.shape.setDepth(3);
 
-        this.bob = scene.tweens.add({ // esine leijuu ylös alas ni helpompi nähä
+        this.bob = scene.tweens.add({ // leijuminen ylös alas
             targets: this.shape,
             y: data.y - 6,
             duration: 700,
@@ -36,12 +44,12 @@ export default class Pickup {
         });
     }
 
-    isNear(player) { // distance check
+    isNear(player) { // true jos pelaaja on tarpeeksi lähellä keräämään
         return Phaser.Math.Distance.Between(player.x, player.y, this.x, this.y) < 40;
     }
 
-    destroy() { // kun esine on kerätty, se poistetaan näkyvistä ja tween animaatio pysäytetään
-        this.bob.stop();
+    destroy() {
+        this.bob.stop(); // pysäytetään leijuminen ensin
         this.shape.destroy();
     }
 }
