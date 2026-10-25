@@ -10,7 +10,8 @@ import gameState from '../systems/GameState.js';
 import Screech from '../entities/Screech.js';
 import Eyes from '../entities/Eyes.js';
 import Director from '../systems/Director.js';
-import { buildFloor, paintWall, addDecor, drawKey } from '../systems/Art.js';
+import { buildFloor, paintWall, addDecor, drawKey, buildDoorArt } from '../systems/Art.js';
+import { createHearts } from '../systems/Hud.js';
 
 const WALL = 40;
 
@@ -61,14 +62,12 @@ export default class RoomScene extends Phaser.Scene {
         this.hudText = this.add.text(20, 8, '', { // teksti kertoo pelaajalle huoneen numeron ja onko avain saatu
             fontFamily: 'Arial', fontSize: '22px', color: '#ffffff'
         }).setDepth(30);
-        this.heartsText = this.add.text(GAME_WIDTH - 20, 4, '', {
-            fontFamily: 'Arial', fontSize: '30px', color: '#ff5252'
-        }).setOrigin(1, 0).setDepth(30);
+        this.hearts = createHearts(this); // sydämet kuvina oikeassa yläkulmassa
 
         // puhekupla: pelaajan ajatukset näkyy pelaajan pään päällä ja seuraa pelaajaa
         this.messageText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '', {
             fontFamily: 'Arial', fontSize: '22px', fontStyle: 'italic', color: '#ffffff',
-            backgroundColor: 'rgba(0, 0, 0, 0.75)', padding: { x: 12, y: 8 },
+            padding: { x: 12, y: 8 },
             wordWrap: { width: 460 }, align: 'center'
         }).setOrigin(0.5, 1).setDepth(30).setVisible(false);
 
@@ -137,13 +136,17 @@ export default class RoomScene extends Phaser.Scene {
     createDoors() { // määritellään ovi ja mahdollinen takaovi
         const d = this.room.door;
         this.door = this.add.rectangle(GAME_WIDTH - WALL / 2, d.y, WALL, d.height, 0x8d6e63);
+        this.door.setVisible(false); // fysiikkalaatikko jää, mutta sitä ei piirretä
         this.physics.add.existing(this.door, true);
+        this.doorArt = buildDoorArt(this, GAME_WIDTH - WALL / 2, d.y, WALL, d.height); // ovikuva
         this.updateDoorColor();
 
         if (this.room.backDoor) {
             const b = this.room.backDoor;
             this.backDoor = this.add.rectangle(WALL / 2, b.y, WALL, b.height, 0x66bb6a);
+            this.backDoor.setVisible(false);
             this.physics.add.existing(this.backDoor, true);
+            buildDoorArt(this, WALL / 2, b.y, WALL, b.height).setOpen(true); // takaovi on aina auki
         }
     }
 
@@ -261,8 +264,8 @@ export default class RoomScene extends Phaser.Scene {
         return true; 
     }
 
-    updateDoorColor() { // ovin väri eri kun pelaajalla on avain ja kaikki esineet ja notes kerätty
-        this.door.setFillStyle(this.canOpenExit() ? 0x66bb6a : 0x8d6e63);
+    updateDoorColor() { // ovikuva aukeaa kun ovi voidaan avata (avain, ja viimeisessä huoneessa kaikki kamat)
+        this.doorArt.setOpen(this.canOpenExit());
     }
 
     onDoorTouched() { // kun pelaaja koskee ovee, tarkistetaan sen kamat
@@ -357,9 +360,7 @@ export default class RoomScene extends Phaser.Scene {
         this.hudText.setText(
             `Room ${this.roomIndex + 1} of ${ROOMS.length}   Key: ${s.key ? 'yes' : 'no'}   Try ${gameState.tries}`
         );
-        const full = '♥'.repeat(this.health.hearts);
-        const empty = '♡'.repeat(MAX_HEARTS - this.health.hearts);
-        this.heartsText.setText(full + empty);
+        this.hearts.set(this.health.hearts); // päivittää sydänkuvat
     }
 
     showMessage(text, duration = 3500) { // näytetään pelaajan ajatus puhekuplassa, esim. kun hän kerää avaimen

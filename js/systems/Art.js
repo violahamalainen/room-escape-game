@@ -14,7 +14,10 @@ const FRAMES_72 = {
     flask_big_red: [288, 336, 16, 16],
     flask_big_blue: [304, 336, 16, 16],
     flask_big_green: [320, 336, 16, 16],
-    flask_big_yellow: [336, 336, 16, 16]
+    flask_big_yellow: [336, 336, 16, 16],
+    ui_heart_full: [289, 370, 13, 12],
+    ui_heart_empty: [321, 370, 13, 12],
+    doors_leaf_closed: [32, 240, 32, 32],
 };
 
 // ladataan kaikki kuvat kerran pelin alussa (BootScene kutsuu tätä)
@@ -149,4 +152,64 @@ export function drawKey(scene, x, y) {
     const bob = scene.tweens.add({ targets: key, y: y - 6, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
     return { destroy: () => { bob.stop(); key.destroy(); } }; // pysäytetään leijuminen ennen poistoa
+}
+
+const DOOR_TINT_ALPHA = 0.35; // kuinka vahva punainen sävy lukitun oven päällä on (0 = ei lainkaan)
+const SHOW_LOCK = true;       // false = ei riippulukkoa oven päällä
+
+// ovi seinän aukossa: pala samaa seinäruutua kuin seinät, punainen sävy ja riippulukko, ja niiden alla pimeä aukko
+// cx, cy = aukon keskipiste, w, h = aukon koko (sama kuin oven fysiikkalaatikolla)
+export function buildDoorArt(scene, cx, cy, w, h) {
+    const passage = scene.add.rectangle(cx, cy, w, h, 0x1b130e).setDepth(2); // aukko oven takana
+
+    const door = buildWallBlock(scene, w, h, 3); // kivipala samasta seinäruudusta kuin seinät
+    door.setPosition(cx - w / 2, cy - h / 2);    // containerin origo on vasen yläkulma, joten ovi vetäytyy ylöspäin
+
+    const tint = scene.add.rectangle(w / 2, h / 2, w, h, 0xff3030, DOOR_TINT_ALPHA); // punainen sävy, koordinaatit containerin sisällä
+    door.add(tint);
+
+    if (SHOW_LOCK) {
+        const lock = scene.add.graphics().setPosition(w / 2, h / 2).setScale(1.4); // riippulukko oven keskelle
+        lock.lineStyle(3, 0xd0d4dc, 1);
+        lock.beginPath();
+        lock.arc(0, -4, 6, Math.PI, 0, false); // sanka eli kaari lukon päällä
+        lock.strokePath();
+        lock.fillStyle(0xb8bcc8, 1);
+        lock.fillRect(-9, -4, 18, 14);         // lukon runko
+        lock.lineStyle(2, 0x55596a, 1);
+        lock.strokeRect(-9, -4, 18, 14);       // tumma reuna rungon ympärille
+        lock.fillStyle(0x2b2b30, 1);
+        lock.fillCircle(0, 2, 2.5);            // avaimenreiän pää
+        lock.fillRect(-1, 2, 2, 5);            // avaimenreiän alaosa
+        door.add(lock);
+    }
+
+    const glow = scene.add.rectangle(cx, cy, w, h, 0x66ff88).setAlpha(0).setDepth(3); // vihreä hohto auki olevan oven päällä
+
+    let isOpen = null; // null = tilaa ei ole vielä asetettu
+
+    return {
+        setOpen(open) { // open = true: ovi vetäytyy ylös, false: ovi kiinni
+            if (open === isOpen) return; // ei tehdä mitään jos tila ei muutu
+            const first = isOpen === null; // ensimmäinen asetus tehdään heti ilman animaatiota
+            isOpen = open;
+
+            scene.tweens.killTweensOf(door);
+            scene.tweens.killTweensOf(glow);
+            const doorScaleY = open ? 0.05 : 1;
+            const doorAlpha = open ? 0 : 1;
+            const glowAlpha = open ? 0.2 : 0;
+
+            if (first) {
+                door.setScale(1, doorScaleY).setAlpha(doorAlpha);
+                glow.setAlpha(glowAlpha);
+            } else {
+                scene.tweens.add({ targets: door, scaleY: doorScaleY, alpha: doorAlpha, duration: 450, ease: 'Sine.easeInOut' });
+                scene.tweens.add({ targets: glow, alpha: glowAlpha, duration: 450 });
+            }
+
+            passage.setFillStyle(open ? 0x050508 : 0x1b130e);
+            passage.setStrokeStyle(3, open ? 0x66bb6a : 0x8a3a3a, 0.9); // vihreä reuna = voi mennä läpi, punainen = lukossa
+        }
+    };
 }
