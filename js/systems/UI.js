@@ -30,3 +30,13 @@ export function fadeToScene(scene, key, data) {
         scene.scene.start(key, data);
     });
 }
+
+// näyttää tekstirivit yksi kerrallaan hitaasti esiin, palauttaa rivit ja kokonaisajan millisekunteina
+export function revealLines(scene, lines, firstY, gap, style, stepMs = 1900, fadeMs = 800) {
+    const texts = lines.map((line, i) => {
+        const t = scene.add.text(scene.scale.width / 2, firstY + i * gap, line, style).setOrigin(0.5).setAlpha(0); // alussa näkymätön
+        scene.tweens.add({ targets: t, alpha: 1, duration: fadeMs, delay: 600 + i * stepMs }); // jokainen rivi alkaa omalla vuorollaan
+        return t;
+    });
+    return { texts, totalMs: 600 + (lines.length - 1) * stepMs + fadeMs };
+}

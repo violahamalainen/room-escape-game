@@ -87,10 +87,11 @@ export default class MenuScene extends Phaser.Scene {
         }
 
         if (gameState.canContinue(name)) {
-            gameState.playerName = name; // jatketaan samaa peliä, kirjoitusasu (isot kirjaimet) voi vaihtua
+            gameState.playerName = name; // jatketaan samaa peliä, suoraan huoneeseen 1 ilman alkutekstiä
+            fadeToScene(this, 'RoomScene', { roomIndex: 0 });
         } else {
-            gameState.beginRun(name); // uusi peli: yritykset ja kello nollataan
+            gameState.beginRun(name); // uusi peli: yritykset ja kello nollataan, alkuteksti ensin
+            fadeToScene(this, 'IntroScene');
         }
-        fadeToScene(this, 'RoomScene', { roomIndex: 0 });
     }
 }

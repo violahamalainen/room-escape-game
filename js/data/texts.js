@@ -24,11 +24,11 @@ export const TEXTS = {
 
     // game over -ruudun otsikko ja vinkki sen mukaan, mikä pelaajan tappoi
     death: {
-        rush: { title: 'You died to Rush.', tip: 'Hide in a closet (E) when the lights flicker.' },
-        screech: { title: 'You died to Screech.', tip: 'Click it quickly when it appears.' },
-        eyes: { title: 'You died to the Eyes.', tip: 'When they open, stand perfectly still.' },
-        time: { title: 'You ran out of time.', tip: 'Read the clues quickly. Wrong guesses cost time.' },
-        unknown: { title: 'You died.', tip: 'Be careful and try again.' }
+        rush: { title: 'You died to Rush.', tip: 'Flickering lights mean visitors. Get into a crate (E) and be very quiet.' },
+        screech: { title: 'You died to Screech.', tip: 'It just wants attention. Click it fast and it will go away.' },
+        eyes: { title: 'You died to the Eyes.', tip: 'They saw you move. Stand perfectly still, until they close.' },
+        time: { title: 'You ran out of time.', tip: 'The walls were patient, but not that patient. Read the clues faster, and guess less.' },
+        unknown: { title: 'You died.', tip: 'The catacombs will still be here. Try again.' }
     },
 
     howToPlayTitle: 'HOW TO PLAY',

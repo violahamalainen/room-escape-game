@@ -10,6 +10,10 @@ import FinalRoomScene from './scenes/FinalRoomScene.js';
 import WinScene from './scenes/WinScene.js';
 import TilePickerScene from './scenes/TilePickerScene.js';
 import PreviewScene from './scenes/PreviewScene.js';
+import IntroScene from './scenes/IntroScene.js';
+
+
+
 
 const config = {
     type: Phaser.AUTO,
@@ -27,7 +31,7 @@ const config = {
         arcade: { debug: false }
     },
     scene: [
-        BootScene, MenuScene, HowToPlayScene, ScoreboardScene, SettingsScene,
+        BootScene, MenuScene, IntroScene, HowToPlayScene, ScoreboardScene, SettingsScene,
         RoomScene, GameOverScene, FinalRoomScene, WinScene,
         TilePickerScene, PreviewScene
     ]
