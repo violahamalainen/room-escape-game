@@ -4,6 +4,8 @@ import { PUZZLE } from '../data/puzzle.js';
 import gameState from '../systems/GameState.js';
 import { formatTime } from '../systems/UI.js';
 import { buildFloor, paintWall, addDecor, buildWallBlock } from '../systems/Art.js';
+import { playSfx, playMusic, prefetchMusic } from '../systems/Audio.js';
+
 
 const SLOT_X = [400, 560, 720, 880]; // pistokkeet ja tarjotin käyttää samoja x-paikkoja
 const SOCKET_Y = 390;
@@ -32,6 +34,8 @@ export default class FinalRoomScene extends Phaser.Scene {
 
     create() {
         this.cameras.main.fadeIn(700, 0, 0, 0);
+          playMusic(this, 'final');
+          prefetchMusic(this, 'win'); // voittomusiikki ladataan valmiiksi
         gameState.startClock(); // kello käy vain kun pelaaja on huoneessa
         this.events.once('shutdown', () => gameState.stopClock()); // kello pysähtyy kun scene päättyy
 
@@ -169,6 +173,7 @@ export default class FinalRoomScene extends Phaser.Scene {
             item.placed = true;
             socket.filled = true;
             this.placedCount += 1;
+            playSfx(this, 'placeOk');
 
             item.plate.setStrokeStyle(3, 0x66bb6a);
             socket.rect.setStrokeStyle(3, 0x66bb6a);
@@ -177,6 +182,7 @@ export default class FinalRoomScene extends Phaser.Scene {
             if (this.placedCount === this.items.length) this.win();
         } else { // väärä: pullo käy pistokkeella ja pomppaa takaisin, aikaa menee
             this.busy = true;
+            playSfx(this, 'placeWrong');
             this.timeLeft -= PUZZLE.penaltyMs;
             this.cameras.main.shake(150, 0.006);
             this.showMessage(`Wrong! -${PUZZLE.penaltyMs / 1000} seconds`, 1800);
@@ -203,6 +209,7 @@ export default class FinalRoomScene extends Phaser.Scene {
 
     win() { // peli päättyy: kello pysäytetään, häivytetään voittoruutuun
         this.finished = true;
+        playSfx(this, 'win');
         this.overlay.setAlpha(0);
         const seconds = gameState.elapsedSeconds(); // tämä on lopullinen peliaika
         this.cameras.main.flash(500, 255, 255, 255);

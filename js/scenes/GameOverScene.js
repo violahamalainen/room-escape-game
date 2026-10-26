@@ -2,6 +2,8 @@ import { GAME_WIDTH } from '../config.js';
 import { TEXTS } from '../data/texts.js';
 import gameState from '../systems/GameState.js';
 import { createButton, fadeToScene } from '../systems/UI.js';
+import { playMusic } from '../systems/Audio.js';
+
 
 export default class GameOverScene extends Phaser.Scene {
     constructor() {
@@ -16,6 +18,7 @@ export default class GameOverScene extends Phaser.Scene {
 
     create() { // luodaan game over scene, pelaaja voi yrittää peliä uudelleen
         this.cameras.main.fadeIn(500, 0, 0, 0);
+        playMusic(this, null); // musiikki hiljenee pois
 
         const info = TEXTS.death[this.cause] || TEXTS.death.unknown; // jos syytä ei tunneta, käytetään yleistä tekstiä
         console.log('cause:', this.cause); // väliaikainen testi, poista kun toimii

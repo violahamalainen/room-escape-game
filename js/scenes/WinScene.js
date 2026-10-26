@@ -3,6 +3,8 @@ import { STORY } from '../data/story.js';
 import gameState from '../systems/GameState.js';
 import { saveScore, loadScores, sortScores } from '../systems/Storage.js';
 import { createButton, fadeToScene, formatTime, revealLines } from '../systems/UI.js';
+import { playMusic } from '../systems/Audio.js';
+
 
 const ENDING_STYLE = { // loppurivien ulkonäkö
     fontFamily: 'Arial', fontSize: '26px', fontStyle: 'italic', color: '#cfd8dc',
@@ -21,6 +23,7 @@ export default class WinScene extends Phaser.Scene {
 
     create() {
         this.cameras.main.fadeIn(700, 0, 0, 0);
+        playMusic(this, 'win');
 
         // tallennetaan tulos kerran, kun voittoruutu avautuu
         const entry = saveScore(gameState.playerName || 'Player', gameState.tries, this.seconds);

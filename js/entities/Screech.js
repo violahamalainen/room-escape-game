@@ -1,5 +1,7 @@
 import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
 import { TEXTS } from '../data/texts.js';
+import { playSfx } from '../systems/Audio.js';
+
 
 const WARNING_MS = 700;  // varoitus ennenkuin hirviö ilmestyy
 
@@ -38,6 +40,7 @@ export default class Screech {
         }
 
         director.start('screech');
+        playSfx(this.scene, 'screech');
         this.scene.cameras.main.flash(250, 255, 0, 0);
         this.scene.showMessage(TEXTS.screechWarning, WARNING_MS);
         this.scene.time.delayedCall(WARNING_MS, () => this.appear()); // varotuksen jälkeen kutsutaan appear()
@@ -118,6 +121,7 @@ export default class Screech {
 
         this.timeout.remove(false); // peruu "liian hidas" -ajastimen
         this.active = false;
+        playSfx(this.scene, 'banish');
         this.removeCreature(true);
         this.scene.showMessage(TEXTS.screechBanished, 900);
         this.scene.director.end();

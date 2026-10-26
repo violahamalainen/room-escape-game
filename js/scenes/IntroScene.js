@@ -1,6 +1,8 @@
 import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
 import { STORY } from '../data/story.js';
 import { revealLines, fadeToScene } from '../systems/UI.js';
+import { playMusic } from '../systems/Audio.js';
+
 
 const LINE_STYLE = { // tekstin ulkonäkö
     fontFamily: 'Arial', fontSize: '30px', fontStyle: 'italic', color: '#d7d2c4',
@@ -20,6 +22,7 @@ export default class IntroScene extends Phaser.Scene {
 
     create() {
         this.cameras.main.fadeIn(600, 0, 0, 0);
+                playMusic(this, 'rooms'); // alkutekstin aikana soi jo huoneiden musiikki, menu-musiikki hiipuu pois
 
         const { totalMs } = revealLines(this, STORY.intro, 190, 105, LINE_STYLE); // rivit ilmestyvät yksi kerrallaan
 

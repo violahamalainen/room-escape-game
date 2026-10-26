@@ -1,6 +1,8 @@
 import { GAME_WIDTH } from '../config.js';
 import { loadSettings, saveSettings } from '../systems/Storage.js';
 import { createButton, fadeToScene } from '../systems/UI.js';
+import { refreshMusicVolume, playSfx } from '../systems/Audio.js';
+
 
 export default class SettingsScene extends Phaser.Scene {
     constructor() {
@@ -22,7 +24,7 @@ export default class SettingsScene extends Phaser.Scene {
         this.addVolumeRow('Music volume', 'musicVolume', 260);
         this.addVolumeRow('Sound effects volume', 'sfxVolume', 400);
 
-        this.add.text(GAME_WIDTH / 2, 520, 'The game has no sound yet. Your choices are already saved.', {
+        this.add.text(GAME_WIDTH / 2, 520, {
             fontFamily: 'Arial', fontSize: '20px', color: '#888888'
         }).setOrigin(0.5);
 
@@ -44,6 +46,8 @@ export default class SettingsScene extends Phaser.Scene {
             const next = Math.round((this.settings[key] + step) * 10) / 10; // pyöristys estää 0.30000000004 -virheet
             this.settings[key] = Phaser.Math.Clamp(next, 0, 1);
             saveSettings(this.settings);
+              if (key === 'musicVolume') refreshMusicVolume(); // musiikin voimakkuus muuttuu heti
+              else playSfx(this, 'pickup');                    // tehosteen voimakkuuden kuulee heti
             refresh();
         };
 

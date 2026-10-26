@@ -1,5 +1,7 @@
 import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
 import { TEXTS } from '../data/texts.js';
+import { playSfx } from '../systems/Audio.js';
+
 
 // säätöarvot yhdessä paikassa, näitä voi muuttaa helposti
 const MIST_ALPHA = 0.8;     // kuinka musta sumu on (0 = näkymätön, 1 = täysin musta)
@@ -132,6 +134,7 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
         this.scene.showMessage(TEXTS.rushWarning2, this.settings.warn2Ms);
         this.startFlicker(90, () => this.overlay.setAlpha(Phaser.Math.FloatBetween(0, 0.75)));
         this.startPops();
+        playSfx(this.scene, 'rushWarn');
 
         this.scene.time.delayedCall(this.settings.warn2Ms, () => this.launch()); // hyökkäys alkaa kun toinen varoitus on ohi
     }

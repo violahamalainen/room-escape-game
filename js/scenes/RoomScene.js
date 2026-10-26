@@ -13,6 +13,8 @@ import Director from '../systems/Director.js';
 import { buildFloor, paintWall, addDecor, drawKey, buildDoorArt } from '../systems/Art.js';
 import { createHearts } from '../systems/Hud.js';
 import { createLowHealth } from '../systems/LowHealth.js';
+import { playSfx, playMusic, prefetchMusic } from '../systems/Audio.js';
+
 
 const WALL = 40;
 
@@ -35,10 +37,14 @@ export default class RoomScene extends Phaser.Scene {
         this.backDoor = null;
         this.messageTimer = null;
         this.lastCause = 'unknown'; // mikä viimeksi satutti pelaajaa, game over -ruutu käyttää tätä
+        this.doorWasOpen = null; // oliko ovi auki viimeksi, null = ei vielä tiedossa (ei ääntä huoneen alussa)
+        this.lockedSoundAt = 0;  // aikaleima: lukitun oven ääni ei toistu liian tiheään
     }
 
     create() {
         this.cameras.main.fadeIn(500, 0, 0, 0);  // huoneitten välinen fade efekti
+        playMusic(this, 'rooms'); // huoneiden musiikki, ei käynnisty uudestaan jos se jo soi
+        if (this.roomIndex >= 2) prefetchMusic(this, 'final'); // ladataan viimeisen huoneen musiikki valmiiksi taustalla
         this.director = new Director(this); // huoneen ohjaaja: vain yksi pelottava tapahtuma kerrallaan
         gameState.startClock(); // kello käy vain kun pelaaja on huoneessa
         this.events.once('shutdown', () => gameState.stopClock()); // kello pysähtyy kun scene päättyy
@@ -202,6 +208,7 @@ export default class RoomScene extends Phaser.Scene {
         if (s.key) return; // jos avain on jo kerätty, ei tehdä mitään
 
         s.key = true;
+        playSfx(this, 'pickup');
         this.key.destroy();
         this.keyArt.destroy(); // piirretty avain pois
         this.updateDoorColor();
@@ -228,6 +235,7 @@ export default class RoomScene extends Phaser.Scene {
             this.showMessage(TEXTS.note);
         }
 
+        playSfx(this, 'pickup');
         pickup.destroy();
         this.updateDoorColor();
         this.updateHud();
@@ -240,6 +248,7 @@ export default class RoomScene extends Phaser.Scene {
             this.hiding = false;
             this.hidingCloset = null;
             this.player.setVisible(true);
+            playSfx(this, 'hide');
             return;
         }
 
@@ -250,6 +259,7 @@ export default class RoomScene extends Phaser.Scene {
         this.hidingCloset = closet; // muistetaan mikä kaappi, jotta sen teksti voidaan vaihtaa
         this.player.body.reset(closet.x, closet.y);
         this.player.setVisible(false);
+        playSfx(this, 'hide');
     }
 
 // -----------------------------------------------------------
@@ -267,7 +277,16 @@ export default class RoomScene extends Phaser.Scene {
     }
 
     updateDoorColor() { // ovikuva aukeaa kun ovi voidaan avata (avain, ja viimeisessä huoneessa kaikki kamat)
-        this.doorArt.setOpen(this.canOpenExit());
+        const open = this.canOpenExit();
+        this.doorArt.setOpen(open);
+        if (open && this.doorWasOpen === false) playSfx(this, 'doorOpen'); // ääni vain hetkellä jolloin ovi aukeaa
+        this.doorWasOpen = open;
+    }
+
+    playLockedSound() { // lukitun oven ääni kuuluu enintään kerran 1,5 sekunnissa, koska törmäys toistuu joka framella
+        if (this.time.now < this.lockedSoundAt) return;
+        this.lockedSoundAt = this.time.now + 1500;
+        playSfx(this, 'doorLocked');
     }
 
     onDoorTouched() { // kun pelaaja koskee ovee, tarkistetaan sen kamat
@@ -275,11 +294,13 @@ export default class RoomScene extends Phaser.Scene {
 
         if (!gameState.roomState(this.roomIndex).key) {
             this.showMessage(TEXTS.doorLocked, 2500);
+            this.playLockedSound();
             return;
         }
 
         if (!this.canOpenExit()) {
             this.showMessage(TEXTS.gateLocked, 3000);
+            this.playLockedSound();
             return;
         }
 
@@ -322,6 +343,7 @@ export default class RoomScene extends Phaser.Scene {
         if (!this.health.takeDamage()) return; // jos pelaaja on invulnerable tai kuollut, ei oteta damagee
 
         this.lastCause = cause; // muistetaan syy, viimeinen osuma ratkaisee mitä game over näyttää
+        playSfx(this, 'hurt');
 
         this.updateHud();
         this.cameras.main.shake(150, 0.01, true);

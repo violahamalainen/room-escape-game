@@ -1,4 +1,6 @@
 import { TEXTS } from '../data/texts.js';
+import { playSfx } from '../systems/Audio.js';
+
 
 const LOOKS = { // silmien ulkonäkö, alueen sävy on vaalea eikä punainen
     closed:  { color: 0x555555, scaleY: 0.12, zoneAlpha: 0 },
@@ -56,6 +58,7 @@ export default class Eyes {
         }
 
         director.start('eyes');
+        playSfx(this.scene, 'eyes');
         this.state = 'warning';
         this.setLook('warning'); // silmät aukeaa puoliksi keltaisena
         if (!this.scene.hiding) { // ei piirretä kuplaa jos pelaaja on kaapissa

@@ -1,6 +1,7 @@
 import { GAME_WIDTH } from '../config.js';
 import gameState from '../systems/GameState.js';
 import { createButton, fadeToScene, formatTime } from '../systems/UI.js';
+import { playMusic, prefetchMusic } from '../systems/Audio.js';
 
 // oikea HTML-kenttä canvasin päällä, tyyli annetaan CSS-tekstinä
 const INPUT_STYLE = 'width: 340px; height: 52px; font-size: 28px; text-align: center; color: #ffffff; background: #1b1b1b; border: 3px solid #8d8d8d; border-radius: 6px; outline: none;';
@@ -17,6 +18,8 @@ export default class MenuScene extends Phaser.Scene {
     create() {
         this.input.keyboard.clearCaptures(); // pelin nuolet ja WASD estäisivät muuten kirjoittamisen nimikenttään
         this.cameras.main.fadeIn(500, 0, 0, 0);
+        playMusic(this, 'menu');
+        prefetchMusic(this, 'rooms') // ladataan musa valmiiks
 
         this.add.text(GAME_WIDTH / 2, 130, 'ESCAPE GAME', {
             fontFamily: 'Arial', fontSize: '80px', color: '#ffffff'
