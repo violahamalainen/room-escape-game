@@ -30,7 +30,7 @@ export const ROOMS = [
         ],
         closets: [[56, 620], [600, 656], [1224, 180]],
         rush: { speed: 950, warn1Ms: 4500, warn2Ms: 2200, minGapMs: 20000, maxGapMs: 32000, firstDelayMs: 8000 },
-        screech: { reactMs: 2500, minGapMs: 25000, maxGapMs: 40000, firstDelayMs: 12000 }
+        screech: { reactMs: 2500, minGapMs: 14000, maxGapMs: 24000, firstDelayMs: 8000 }
     },
     {
         name: 'Room 3',
@@ -52,8 +52,8 @@ export const ROOMS = [
         rush: { speed: 1100, warn1Ms: 4000, warn2Ms: 2000, minGapMs: 14000, maxGapMs: 24000, firstDelayMs: 6000 },
         eyes: [
             // molemmat silmäparit vahtivat koko huonetta, ohjaaja päästää vain yhden kerrallaan hereille
-            { x: 1190, y: 658, zone: { x: 40, y: 40, w: 1200, h: 640 }, warnMs: 1000, minOpenMs: 1500, maxOpenMs: 3500, minClosedMs: 12000, maxClosedMs: 30000, firstDelayMs: 10000 },
-            { x: 390, y: 658, zone: { x: 40, y: 40, w: 1200, h: 640 }, warnMs: 1000, minOpenMs: 1500, maxOpenMs: 3500, minClosedMs: 12000, maxClosedMs: 30000, firstDelayMs: 20000 }
+            { x: 1190, y: 658, zone: { x: 40, y: 40, w: 1200, h: 640 }, warnMs: 1000, minOpenMs: 1500, maxOpenMs: 3500, minClosedMs: 7000, maxClosedMs: 16000, firstDelayMs: 6000 },
+            { x: 390, y: 658, zone: { x: 40, y: 40, w: 1200, h: 640 }, warnMs: 1000, minOpenMs: 1500, maxOpenMs: 3500, minClosedMs: 7000, maxClosedMs: 16000, firstDelayMs: 12000 }
         ]
     },
     {
@@ -73,7 +73,7 @@ export const ROOMS = [
         ],
         closets: [[56, 600], [604, 260], [884, 420], [1224, 560]],
         rush: { speed: 1250, warn1Ms: 3500, warn2Ms: 1800, minGapMs: 9000, maxGapMs: 18000, firstDelayMs: 5000 },
-        screech: { reactMs: 2000, minGapMs: 20000, maxGapMs: 30000, firstDelayMs: 10000 },
+        screech: { reactMs: 2000, minGapMs: 14000, maxGapMs: 24000, firstDelayMs: 7000 },
         eyes: [
             { x: 1060, y: 62, zone: { x: 40, y: 40, w: 1200, h: 640 }, warnMs: 1000, minOpenMs: 1500, maxOpenMs: 3500, minClosedMs: 15000, maxClosedMs: 35000, firstDelayMs: 12000 }
         ]

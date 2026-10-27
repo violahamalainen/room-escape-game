@@ -15,9 +15,6 @@ export default class BootScene extends Phaser.Scene {
         prepareArt(this); // nimetään kuvien palat ja tehdään animaatiot
 
         // launch eikä start: BootScene jää käyntiin, ja sen lataajaa käytetään musiikkien lataamiseen myöhemmin
-        const tool = new URLSearchParams(window.location.search).get('tool'); // ?tool=picker tai ?tool=preview avaa kehitystyökalun
-        if (tool === 'picker') this.scene.launch('TilePickerScene');
-        else if (tool === 'preview') this.scene.launch('PreviewScene');
-        else this.scene.launch('MenuScene'); // peli alkaa valikosta
+        this.scene.launch('MenuScene'); // peli alkaa valikosta
     }
 }

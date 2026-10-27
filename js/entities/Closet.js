@@ -11,8 +11,7 @@ export default class Closet {
 
         const above = y > 120; // ylhäällä seinän vieressä olevan laatikon teksti tulee laatikon alapuolelle
         this.prompt = scene.add.text(x, above ? y - 46 : y + 46, 'E: hide', {
-            fontFamily: 'Arial', fontSize: '20px', color: '#ffd54f',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)', padding: { x: 6, y: 2 }
+            fontFamily: 'Arial', fontSize: '20px', color: '#ffd54f'
         }).setOrigin(0.5).setDepth(5).setVisible(false);
     }
 
