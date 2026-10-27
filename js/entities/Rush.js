@@ -3,15 +3,15 @@ import { TEXTS } from '../data/texts.js';
 import { playSfx } from '../systems/Audio.js';
 
 
-// säätöarvot yhdessä paikassa, näitä voi muuttaa helposti
-const MIST_ALPHA = 0.8;     // kuinka musta sumu on (0 = näkymätön, 1 = täysin musta)
-const DARK_MIN = 0.25;      // huoneen pimeys sumun aikana vaihtelee näiden välillä
+
+const MIST_ALPHA = 0.8;     // kuinka musta sumu on 0=näkymätön 1=musta
+const DARK_MIN = 0.25;      // huoneen pimeys sumun aikana vaihtelee
 const DARK_MAX = 0.7;
 const FADE_OUT_MS = 1800;   // kuinka hitaasti huone vaalenee sumun jälkeen
-const HIT_WIDTH = 170;      // osumalaatikon leveys, sama kuin sumun näkyvä ydin
-const RUMBLE = 0.004;       // ruudun tärinän voimakkuus sumun aikana (0 = ei tärinää)
+const HIT_WIDTH = 170;      // hitboxin leveys, sama kuin sumun "ydin"
+const RUMBLE = 0.004;       // ruudun tärinän voimakkuus sumun aikana, 0 = ei tärise
 
-function ensureMistTexture(scene) { // tekee pehmeän mustan pilven kuvan vain kerran, kuva säilyy huoneesta toiseen
+function ensureMistTexture(scene) { // tekee pehmeän mustan pilven kuvan 
     if (scene.textures.exists('mistBlob')) return;
 
     const tex = scene.textures.createCanvas('mistBlob', 256, 256);
@@ -25,26 +25,26 @@ function ensureMistTexture(scene) { // tekee pehmeän mustan pilven kuvan vain k
     tex.refresh();
 }
 
-export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumuna, odota...
+export default class Rush { // odota, varoita (kaks kertaa), hyökkää, odota...
     constructor(scene, settings) { // säilyttää scene ja room asetukset, luo overlayn ja sumun, aikatauluttaa ensimmäisen hyökkäyksen
         this.scene = scene;
         this.settings = settings;
         this.active = false; // kertoo onko rush liikkeellä vai ei
         this.hitThisPass = false; // vaan yks damage per hyökkäys
         this.flickerEvent = null; // vilkkumisen ajastin
-        this.popEvent = null; // valojen "poksahdusten" ajastin
+        this.popEvent = null; // valojen välkkymisen ajastin
 
         this.overlay = scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000);
         this.overlay.setAlpha(0).setDepth(20);
 
-        // sumu: monta päällekkäistä pehmeää mustaa pilveä samassa containerissa
+        // sumu on monta päällekkäistä pehmeää mustaa pilveä samassa containerissa
         ensureMistTexture(scene);
         this.mist = scene.add.container(-600, GAME_HEIGHT / 2);
         this.mist.setDepth(10).setAlpha(MIST_ALPHA).setVisible(false);
-        this.blobs = []; // sumun runko
-        this.wisps = []; // pienemmät kaistaleet jotka jäävät sumun perään
+        this.blobs = []; // sumun pää kohta
+        this.wisps = []; // mini sumut
 
-        [-70, 0, 70].forEach((x) => { // kolme pystysuoraa pilvijonoa vierekkäin
+        [-70, 0, 70].forEach((x) => { // kolme pystysuoraa pilvee
             for (let y = -330; y <= 330; y += 66) {
                 this.addBlob(
                     x + Phaser.Math.Between(-15, 15),
@@ -57,14 +57,14 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
             this.addBlob(0, Phaser.Math.Between(-300, 300), Phaser.Math.FloatBetween(0.6, 0.9), 0.35, this.wisps);
         }
 
-        // näkymätön osumalaatikko, seuraa sumua ja kattaa koko huoneen korkeuden
+        // näkymätön hitbox, seuraa sumua ja on koko huoneen korkunen
         this.body = scene.add.rectangle(-600, GAME_HEIGHT / 2, HIT_WIDTH, GAME_HEIGHT - 80, 0x000000);
         this.body.setVisible(false);
 
         this.scheduleNext(settings.firstDelayMs); // eka hyökkäys aikataulutetaan heti kun huone luotu
     }
 
-    addBlob(x, y, scale, alpha, list) { // yksi pilvi sumuun, perusasento tallennetaan jotta sen voi palauttaa
+    addBlob(x, y, scale, alpha, list) { 
         const blob = this.scene.add.image(x, y, 'mistBlob');
         blob.setScale(scale).setAlpha(alpha);
         blob.baseX = x;
@@ -78,7 +78,7 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
         this.scene.time.delayedCall(delayMs, () => this.tryStart());
     }
 
-    tryStart() { // alkaa vain jos ohjaaja antaa luvan, muuten yritetään hetken päästä uudestaan
+    tryStart() { // alkaa vain jos director antaa luvan, muuten yritetään hetken päästä uudestaan
         if (this.scene.changingRoom) return;
 
         const director = this.scene.director;
@@ -96,12 +96,12 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
         this.flickerEvent = this.scene.time.addEvent({ delay: delay, loop: true, callback: callback });
     }
 
-    stopFlicker() { // pysäyttää vilkkumisen, ei koske overlayn kirkkauteen
+    stopFlicker() { // pysäyttää vilkkumisen
         if (this.flickerEvent) this.flickerEvent.remove(false);
         this.flickerEvent = null;
     }
 
-    startPops() { // valot "poksahtelee": lyhyitä kirkkaita välähdyksiä satunnaisesti
+    startPops() { // valot välkkyy eli lyhyitä kirkkaita välähdyksiä satunnaisesti
         this.stopPops();
         this.popEvent = this.scene.time.addEvent({
             delay: 600,
@@ -117,7 +117,7 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
         this.popEvent = null;
     }
 
-    startStage1() { // ensimmäinen varoitus: hento ja harvinainen vilkahtelu
+    startStage1() { // eka varoitus: hennompi vilkkuminen
         this.scene.tweens.killTweensOf(this.overlay); // pysäyttää edellisen hyökkäyksen hitaan vaalenemisen
         this.scene.showMessage(TEXTS.rushWarning1, this.settings.warn1Ms, { id: 'rushWarn1', max: 1, danger: true });
 
@@ -128,7 +128,7 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
         this.scene.time.delayedCall(this.settings.warn1Ms, () => this.startStage2());
     }
 
-    startStage2() { // toinen varoitus: voimakas vilkkuminen ja poksahtelevat valot
+    startStage2() { // toka varoitus: agressiivinen vilkkuminen
         if (this.scene.changingRoom) return;
 
         this.scene.showMessage(TEXTS.rushWarning2, this.settings.warn2Ms, { id: 'rushWarn2', max: 2, danger: true });
@@ -147,7 +147,7 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
 
         [...this.blobs, ...this.wisps].forEach((b) => {
             b.setPosition(b.baseX, b.baseY).setScale(b.baseScale);
-            this.scene.tweens.add({ // jokainen pilvi aaltoilee omaan tahtiinsa, siitä tulee elävä sumu
+            this.scene.tweens.add({ // jokainen pilvi aaltoilee omaan tahtiinsa
                 targets: b,
                 y: b.baseY + Phaser.Math.Between(-30, 30),
                 scale: b.baseScale * Phaser.Math.FloatBetween(1.1, 1.3),
@@ -178,11 +178,11 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
         this.active = true;
         this.hitThisPass = false; 
 
-        // huone pimenee ja valot vilkkuu holtittomasti koko sumun ajan
+        // huone pimenee ja valot vilkkuu koko sumun ajan
         this.startFlicker(70, () => this.overlay.setAlpha(Phaser.Math.FloatBetween(DARK_MIN, DARK_MAX)));
 
         const duration = (Math.abs(endX - startX) / this.settings.speed) * 1000; 
-        this.scene.cameras.main.shake(duration, RUMBLE); // kevyt jyrinä
+        this.scene.cameras.main.shake(duration, RUMBLE); // näyttö heiluu
         this.scene.tweens.add({ 
             targets: this.mist,
             x: endX,

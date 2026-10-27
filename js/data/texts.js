@@ -1,4 +1,4 @@
-// kaikki pelin tekstit yhdessä paikassa, täältä voi muokata niitä
+// lähes kaikki pelin tekstit yhdessä paikassa, täältä voi muokata niitä
 export const TEXTS = {
     controlsHint: 'WASD / arrows: move     E: hide',
     controlsHintTouch: 'Joystick: move     HIDE button: hide',

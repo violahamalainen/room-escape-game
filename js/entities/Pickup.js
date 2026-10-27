@@ -1,6 +1,6 @@
 import { ART_SCALE } from '../config.js';
 
-// piirretty kääröpaperi, keskipiste on (0, 0)
+// piirretty note, keskipiste on (0, 0)
 function drawScroll(scene) {
     const g = scene.add.graphics();
     g.fillStyle(0xf5f0dc, 1);
@@ -15,7 +15,7 @@ function drawScroll(scene) {
     return g;
 }
 
-// esine (pullo) tai muistiinpano (käärö), leijuu ylös alas ja hohtaa
+// flask tai  note, leijuu ylös alas
 export default class Pickup {
     constructor(scene, kind, data) {
         this.kind = kind;

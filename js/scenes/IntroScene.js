@@ -17,7 +17,7 @@ export default class IntroScene extends Phaser.Scene {
         this.cameras.main.fadeIn(600, 0, 0, 0);
         playMusic(this, 'rooms'); // alkutekstin aikana soi jo huoneiden musiikki
 
-        // kun kaikki lauseet on näytetty, häivytetään peliin
+        // kun kaikki lauseet on näytetty, fade to scene
         playSequence(this, STORY.intro, () => fadeToScene(this, 'RoomScene', { roomIndex: 0 }));
     }
 }

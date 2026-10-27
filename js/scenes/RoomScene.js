@@ -75,7 +75,7 @@ export default class RoomScene extends Phaser.Scene {
             fontFamily: 'Arial', fontSize: '22px', color: '#ffffff'
         }).setDepth(30);
         this.hearts = createHearts(this); // sydämet kuvina oikeassa yläkulmassa
-        this.lowHealth = createLowHealth(this); // punainen reunahehku kun sydämiä on vähän
+        this.lowHealth = createLowHealth(this); // punainen reuna kun sydämiä on vähän
 
         this.bubbles = new Bubbles(this); // pelaajan ajatukset stäckätty pään yläpuolella
 
@@ -106,7 +106,7 @@ export default class RoomScene extends Phaser.Scene {
 
         this.input.keyboard.on('keydown-E', () => this.toggleHide());
 
-        // TEMPORARY: paina 0 niin hyppäät suoraan viimeiseen huoneeseen testausta varten, poistetaan ennen palautusta
+        // TEMPORARY: paina 0 niin hyppäät suoraan viimeiseen huoneeseen testausta varten, poista ennen palautusta
         this.input.keyboard.on('keydown-ZERO', () => this.scene.start('FinalRoomScene'));
     }
 
@@ -338,7 +338,7 @@ export default class RoomScene extends Phaser.Scene {
 //                      DAMAGE JA GAME OVER
 // -----------------------------------------------------------  
 
-    hurtPlayer(cause = 'unknown') { // cause kertoo mikä satutti: 'rush', 'screech' tai 'eyes'
+    hurtPlayer(cause = 'unknown') { // cause kertoo mikä satutti
         if (this.changingRoom) return; // jos huonetta vaihdetaan, ei oteta damagee
         if (!this.health.takeDamage()) return; // jos pelaaja on invulnerable tai kuollut, ei oteta damagee
 
@@ -386,7 +386,7 @@ export default class RoomScene extends Phaser.Scene {
         this.lowHealth.set(this.health.hearts); // hehku päälle kun on enää yksi sydän
     }
 
-    // näyttää pelaajan ajatuksen kuplassa. rule = { id, max, cooldownMs, danger }
+    // näyttää pelaajan ajatuksen kuplassa
     showMessage(text, duration = 3500, rule = {}) {
         const { id, max, cooldownMs, danger } = rule;
 
@@ -416,7 +416,7 @@ export default class RoomScene extends Phaser.Scene {
 
         if (!this.hiding) this.collectNearbyPickups();
 
-        this.closets.forEach((c) => { // laatikon teksti: piilossa ollessa vain sen laatikon päällä lukee ulos-ohje
+        this.closets.forEach((c) => { // laatikon teksti: piilossa ollessa vain sen laatikon päällä lukee ulos ohje
             if (this.hiding) {
                 c.setPrompt(this.outLabel, c === this.hidingCloset);
             } else {

@@ -25,7 +25,7 @@ export default class Screech {
         this.scene.time.delayedCall(delayMs, () => this.tryStart());
     }
 
-    tryStart() { // alkaa vain jos pelaaja ei piilossa ja ohjaaja antaa luvan
+    tryStart() { // alkaa vain jos pelaaja ei piilossa ja director antaa luvan
         if (this.scene.changingRoom) return;
 
         if (this.scene.hiding) { // jos piilossa, ei hyökkäystä tällä kertaa
@@ -119,7 +119,7 @@ export default class Screech {
         if (!this.active) return;
         if (this.scene.changingRoom) return;
 
-        this.timeout.remove(false); // peruu "liian hidas" -ajastimen
+        this.timeout.remove(false); // peruu "liian hidas" ajastimen
         this.active = false;
         playSfx(this.scene, 'banish');
         this.removeCreature(true);

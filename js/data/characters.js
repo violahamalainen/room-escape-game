@@ -1,7 +1,6 @@
-// kaikki pelattavat hahmot kuvassa 0x72_DungeonTilesetII: nimi ja rivin y-koordinaatti
-// idle-kuvat alkavat x:stä 128 ja run-kuvat x:stä 192, ellei hahmolla ole omia arvoja
 export const DEFAULT_CHARACTER = 'wizard_m'; // pelin oletushahmo
 
+// lisää nää hahmot myöhemmin
 export const CHARACTERS = [
     { name: 'elf_f', y: 4 }, { name: 'elf_m', y: 36 },
     { name: 'knight_f', y: 68 }, { name: 'knight_m', y: 100 },

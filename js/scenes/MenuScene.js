@@ -41,7 +41,7 @@ export default class MenuScene extends Phaser.Scene {
             if (event.key === 'Enter') this.startGame();
         });
 
-        this.hint = this.add.text(GAME_WIDTH / 2, 365, '', { // virheilmoitus, esim. "Type a name first."
+        this.hint = this.add.text(GAME_WIDTH / 2, 365, '', { // virheilmoitus esim "type a name first."
             fontFamily: 'Arial', fontSize: '22px', color: '#ff8a80'
         }).setOrigin(0.5);
 

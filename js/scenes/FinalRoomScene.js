@@ -7,7 +7,7 @@ import { buildFloor, paintWall, addDecor, buildWallBlock } from '../systems/Art.
 import { playSfx, playMusic, prefetchMusic } from '../systems/Audio.js';
 
 
-const SLOT_X = [400, 560, 720, 880]; // pistokkeet ja tarjotin käyttää samoja x-paikkoja
+const SLOT_X = [400, 560, 720, 880]; // sockets ja tray käyttää samoja x-paikkoja
 const SOCKET_Y = 390;
 const TRAY_Y = 590;
 const WALL_START = 40;      // seinän sisäreuna alussa
@@ -23,8 +23,8 @@ export default class FinalRoomScene extends Phaser.Scene {
     init() { // kaikki nollataan tässä, koska sama scene-olio käytetään uudelleen
         this.timeLeft = PUZZLE.timeLimitMs;
         this.finished = false; // voitto tai häviö -> mikään ei enää toimi
-        this.busy = false; // true kun väärän pullon palautusanimaatio on käynnissä
-        this.selected = null; // tarjottimelta valittu pullo
+        this.busy = false; // true kun väärän flaskin palautusanimaatio on käynnissä
+        this.selected = null; // tarjottimelta valittu flask
         this.placedCount = 0;
         this.notesOpen = true;
         this.flickerTimer = 0;
@@ -72,7 +72,7 @@ export default class FinalRoomScene extends Phaser.Scene {
     //                      HUONEEN RAKENNUS
     // -----------------------------------------------------------
 
-    createSockets() { // neljä pistoketta numeroituna vasemmalta oikealle
+    createSockets() { // neljä sockettia numeroituna vasemmalta oikealle
         this.sockets = SLOT_X.map((x, i) => {
             const rect = this.add.rectangle(x, SOCKET_Y, 110, 110, 0x2a2433);
             rect.setStrokeStyle(3, 0x8d8d8d);
@@ -87,7 +87,7 @@ export default class FinalRoomScene extends Phaser.Scene {
         });
     }
 
-    createItems() { // tarjottimelle tulee kaikkien huoneiden pullot, jokaisella värin nimi
+    createItems() { // tarjottimelle tulee kaikkien huoneiden flaskit, jokaisella värin nimi
         this.items = ROOMS.filter((r) => r.object).map((room, i) => {
             const data = room.object;
             const x = SLOT_X[i];
@@ -95,11 +95,11 @@ export default class FinalRoomScene extends Phaser.Scene {
             const plate = this.add.rectangle(0, 0, 100, 100, 0x2a2433);
             plate.setStrokeStyle(2, 0x6d6d6d);
             const flask = this.add.image(0, -10, 'dungeonSheet', `flask_big_${data.flask}`).setScale(3);
-            const label = this.add.text(0, 32, data.flask, { // värin nimi, jotta värisokeakin tietää mikä pullo on kyseessä
+            const label = this.add.text(0, 32, data.flask, { // värin nimi
                 fontFamily: 'Arial', fontSize: '20px', color: '#ffffff'
             }).setOrigin(0.5);
 
-            // container yhdistää alustan, pullon ja nimen, ja antaa niille yhteisen klikkausalueen
+            // container yhdistää alustan, flaskin ja nimen, ja antaa niille yhteisen klikkausalueen
             const container = this.add.container(x, TRAY_Y, [plate, flask, label]);
             container.setSize(100, 100).setDepth(10);
             container.setInteractive({ useHandCursor: true });
@@ -110,7 +110,7 @@ export default class FinalRoomScene extends Phaser.Scene {
         });
     }
 
-    createNotesPanel() { // vihjepaneeli ylhäällä, aina näkyvissä, sisältö tulee huoneiden notes-teksteistä
+    createNotesPanel() { // vihjepaneeli ylhäällä, sisältö tulee huoneiden notes-teksteistä
         this.notesBg = this.add.rectangle(GAME_WIDTH / 2, 170, 760, 220, 0x000000, 0.92);
         this.notesBg.setStrokeStyle(3, 0xf5f0dc).setDepth(40);
 
@@ -135,7 +135,7 @@ export default class FinalRoomScene extends Phaser.Scene {
     onItemClicked(item) {
         if (this.finished || this.busy || item.placed) return;
 
-        if (this.selected === item) { // toinen klikkaus samaan pulloon peruu valinnan
+        if (this.selected === item) { // toinen klikkaus samaan flaskiin peruu valinnan
             this.deselect();
             return;
         }
@@ -165,7 +165,7 @@ export default class FinalRoomScene extends Phaser.Scene {
             this.tweens.add({ targets: item.container, x: socket.x, y: socket.y, duration: 200 });
 
             if (this.placedCount === this.items.length) this.win();
-        } else { // väärä: pullo käy pistokkeella ja pomppaa takaisin, aikaa menee
+        } else { // väärä: flask käy socketissa ja pomppaa takaisin, aikaa menee
             this.busy = true;
             playSfx(this, 'placeWrong');
             this.timeLeft -= PUZZLE.penaltyMs;
@@ -178,7 +178,7 @@ export default class FinalRoomScene extends Phaser.Scene {
             this.tweens.add({
                 targets: item.container,
                 x: socket.x, y: socket.y,
-                duration: 150, hold: 300, yoyo: true, // menee pistokkeelle, odottaa, palaa takaisin
+                duration: 150, hold: 300, yoyo: true, // menee sockettiin, odottaa, palaa takaisin
                 onComplete: () => {
                     socket.rect.setStrokeStyle(3, 0x8d8d8d);
                     item.plate.setStrokeStyle(2, 0x6d6d6d);

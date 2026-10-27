@@ -8,7 +8,7 @@ export default class BootScene extends Phaser.Scene {
 
     preload() {
         loadArt(this); // kaikki kuvat ladataan kerran pelin alussa
-        loadSfx(this); // ja lyhyet äänitehosteet. Musiikit ladataan vasta kun niitä tarvitaan
+        loadSfx(this); // ja lyhyet äänitehosteet, mut musiikit ladataan vasta kun niitä tarvitaan
     }
 
     create() {

@@ -2,7 +2,7 @@ import { TEXTS } from '../data/texts.js';
 import { playSfx } from '../systems/Audio.js';
 
 
-const LOOKS = { // silmien ulkonäkö, alueen sävy on vaalea eikä punainen
+const LOOKS = { // silmien ulkonäkö
     closed:  { color: 0x555555, scaleY: 0.12, zoneAlpha: 0 },
     warning: { color: 0xffd54f, scaleY: 0.55, zoneAlpha: 0.05 },
     open:    { color: 0xff5252, scaleY: 1,    zoneAlpha: 0.10 }
@@ -28,19 +28,19 @@ export default class Eyes {
         const pupilRight = scene.add.circle(22, 0, 6, 0x000000);
         this.whites = [whiteLeft, whiteRight]; 
 
-        // container yhdistää muodot yhdeksi, jolloin ne liikkuu ja skaalautuu yhdessä
+        // container yhdistää muodot yheks, jolloin ne liikkuu ja skaalautuu yhdessä
         this.face = scene.add.container(data.x, data.y, [whiteLeft, whiteRight, pupilLeft, pupilRight]);
         this.face.setDepth(4);
         this.face.setScale(1, LOOKS.closed.scaleY); // litistetään kiinni olevan näköiseksi
 
-        this.scheduleOpen(data.firstDelayMs); // aloitetaan ensimmäinen odotus
+        this.scheduleOpen(data.firstDelayMs); // alotetaan eka odotus
     }
 
     closedGap() { // random aika kuinka kauan silmät pysyy kiinni
         return Phaser.Math.Between(this.data.minClosedMs, this.data.maxClosedMs);
     }
 
-    openTime() { // random aika kuinka kauan silmät pysyy auki, ettei rytmiä voi laskea
+    openTime() { // random aika kuinka kauan silmät pysyy auki, ettei oo mitään tarkkaa rytmiä
         return Phaser.Math.Between(this.data.minOpenMs, this.data.maxOpenMs);
     }
 
@@ -74,7 +74,7 @@ export default class Eyes {
 
         this.state = 'open';
         this.hitThisOpening = false; // uusi avautuminen, voi osua taas kerran
-        this.setLook('open'); // silmät auki punaisena
+        this.setLook('open'); // silmät auki punasena
         if (!this.scene.hiding) {
             this.scene.showMessage(TEXTS.eyesOpen, openFor, { id: 'eyesOpen', max: 2, danger: true });
         }
@@ -106,7 +106,7 @@ export default class Eyes {
 
         if (s.player.isTryingToMove()) { // liikkui silmien ollessa auki
             this.hitThisOpening = true;
-            s.hurtPlayer('eyes'); // sama damage-funktio kuin rushilla ja screechillä
+            s.hurtPlayer('eyes'); // sama damage funktio kuin rushilla ja screechillä
         }
     }
 }

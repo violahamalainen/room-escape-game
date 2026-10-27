@@ -1,12 +1,12 @@
 import { ART_SCALE } from '../config.js';
 
-// piilopaikka: laatikko, jonka sisään pelaaja voi piiloutua
+// laatikko, jonka sisään pelaaja voi piiloutua
 export default class Closet {
     constructor(scene, x, y) {
         this.x = x;
         this.y = y;
 
-        this.crate = scene.add.image(x, y, 'dungeonSheet', 'crate'); // laatikon kuva 0x72-paketista
+        this.crate = scene.add.image(x, y, 'dungeonSheet', 'crate'); // laatikon kuva 0x72 art packistä
         this.crate.setScale(ART_SCALE).setDepth(2);
 
         const above = y > 120; // ylhäällä seinän vieressä olevan laatikon teksti tulee laatikon alapuolelle

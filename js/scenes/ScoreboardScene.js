@@ -8,7 +8,7 @@ export default class ScoreboardScene extends Phaser.Scene {
     }
 
     init(data) {
-        this.highlightId = (data && data.highlightId) || null; // juuri tallennettu tulos korostetaan
+        this.highlightId = (data && data.highlightId) || null; // äsken tallennettu tulos korostetaan
         this.leaving = false;
     }
 

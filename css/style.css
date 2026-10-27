@@ -3,10 +3,10 @@ html, body {
     padding: 0;
     width: 100%;
     height: 100%;
-    height: 100dvh;                   /* dvh = huomioi puhelimen osoitepalkin, joka muuten syö korkeutta */
+    height: 100dvh;                   /* dvh = huomioi puhelimen osoitepalkin, joka muuten safkaa korkeutta */
     background-color: #000;
     overflow: hidden;
-    overscroll-behavior: none;        /* ei "vedä päivitä" -liikettä eikä vieritystä */
+    overscroll-behavior: none;       
     touch-action: none;               /* sormi ei vieritä eikä zoomaa sivua */
     -webkit-user-select: none;
     user-select: none;
@@ -14,7 +14,7 @@ html, body {
     -webkit-tap-highlight-color: transparent;
 }
 
-input {                               /* nimikenttä tarvitsee tekstin valinnan, muuten Safari ei salli kirjoittamista */
+input {                               /* nimikenttä tarvitsee tekstin valinnan tai safari ei salli kirjottamista */
     -webkit-user-select: text;
     user-select: text;
 }
@@ -25,7 +25,7 @@ input {                               /* nimikenttä tarvitsee tekstin valinnan,
     height: 100dvh;
 }
 
-#rotate-overlay {                     /* "käännä puhelin" -viesti, piilossa oletuksena */
+#rotate-overlay {                     /* käännä puhelin viesti, piilossa oletuksena */
     display: none;
     position: fixed;
     inset: 0;

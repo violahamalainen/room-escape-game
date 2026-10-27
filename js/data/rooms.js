@@ -6,7 +6,7 @@ export const ROOMS = [
         playerStart: { x: 120, y: 360 },
         door: { y: 360, height: 120 },
         key: { x: 900, y: 140 },
-        object: { x: 1100, y: 200, flask: 'red', color: 0xff5252 }, // flask = pullon väri, color = pullon hohto
+        object: { x: 1100, y: 200, flask: 'red', color: 0xff5252 }, 
         note: { x: 350, y: 600, text: 'The blue flask is in the last socket.' },
         walls: [
             [640, 360, 40, 300]
@@ -51,7 +51,7 @@ export const ROOMS = [
         closets: [[56, 600], [470, 64], [820, 656], [1224, 160]],
         rush: { speed: 1100, warn1Ms: 4000, warn2Ms: 2000, minGapMs: 14000, maxGapMs: 24000, firstDelayMs: 6000 },
         eyes: [
-            // molemmat silmäparit vahtivat koko huonetta, ohjaaja päästää vain yhden kerrallaan hereille
+            // molemmat silmäparit vahtivat koko huonetta, director päästää vaan yhen kerrallaan hereille
             { x: 1190, y: 658, zone: { x: 40, y: 40, w: 1200, h: 640 }, warnMs: 1000, minOpenMs: 1500, maxOpenMs: 3500, minClosedMs: 7000, maxClosedMs: 16000, firstDelayMs: 6000 },
             { x: 390, y: 658, zone: { x: 40, y: 40, w: 1200, h: 640 }, warnMs: 1000, minOpenMs: 1500, maxOpenMs: 3500, minClosedMs: 7000, maxClosedMs: 16000, firstDelayMs: 12000 }
         ]

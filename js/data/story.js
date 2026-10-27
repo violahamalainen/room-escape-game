@@ -1,4 +1,4 @@
-// pelin alku- ja loppuruudun tekstit, näitä voi muokata vapaasti
+// pelin intro ja outro tekstit
 export const STORY = {
     intro: [
         'Good, you woke up.',

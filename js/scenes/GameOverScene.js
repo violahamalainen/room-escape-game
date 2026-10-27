@@ -27,7 +27,7 @@ export default class GameOverScene extends Phaser.Scene {
             fontFamily: 'Arial', fontSize: '80px', color: '#ff5252'
         }).setOrigin(0.5);
 
-        this.add.text(GAME_WIDTH / 2, 240, info.title, { // esim. "You died to Rush."
+        this.add.text(GAME_WIDTH / 2, 240, info.title, { 
             fontFamily: 'Arial', fontSize: '36px', color: '#ffffff'
         }).setOrigin(0.5);
 

@@ -3,11 +3,11 @@ import { CHARACTERS, DEFAULT_CHARACTER } from '../data/characters.js';
 import gameState from '../systems/GameState.js';
 
 const FACES_RIGHT = true; // hahmokuva katsoo oikealle, jos hahmo kävelee takaperin vaihda tämä false
-const BODY_SIZE = 16;     // osumalaatikon sivu kuvan pikseleinä, 16 x ART_SCALE (2) = 32 ruudulla, sama koko kuin ennen
+const BODY_SIZE = 16;     // hitboxin sivu kuvan pikseleinä, 16 x ART_SCALE (2) = 32 ruudulla
 
 export default class Player extends Phaser.GameObjects.Sprite {
     constructor(scene, x, y) {
-        const wanted = gameState.character || DEFAULT_CHARACTER; // valittu hahmo, oletuksena velho
+        const wanted = gameState.character || DEFAULT_CHARACTER; // valittu hahmo, nyt oletus: velho
         const info = CHARACTERS.find((c) => c.name === wanted) || CHARACTERS[0];
         super(scene, x, y, 'dungeonSheet', `${info.name}_idle_0`);
 
@@ -18,14 +18,14 @@ export default class Player extends Phaser.GameObjects.Sprite {
         this.keys = scene.input.keyboard.addKeys('W,A,S,D');
 
         const h = info.h || 28; // hahmon korkeus kuvassa
-        this.setOrigin(0.5, (h - BODY_SIZE / 2) / h); // hahmon paikka (x, y) on jalkojen osumalaatikon keskellä
+        this.setOrigin(0.5, (h - BODY_SIZE / 2) / h); // hahmon paikka (x, y) on jalkojen hitboxin keskellä
         this.setScale(ART_SCALE);
         this.setDepth(4); // seinien (1) ja soihtujen (2) päällä, kaapin tekstin (5) alla
 
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
-        this.body.setSize(BODY_SIZE, BODY_SIZE, false); // osumalaatikko vain jalkojen kohdalle
+        this.body.setSize(BODY_SIZE, BODY_SIZE, false); // hitbox vain jalkojen kohdalle
         this.body.setOffset(0, h - BODY_SIZE);          // laatikko kuvan alareunaan
 
         this.play(`${this.charName}_idle`);
@@ -40,7 +40,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
         if (this.cursors.up.isDown || this.keys.W.isDown) dy -= 1;
         if (this.cursors.down.isDown || this.keys.S.isDown) dy += 1;
 
-        const touch = this.scene.touch; // kosketusohjaus: joystick korvaa näppäimet kun sitä työnnetään
+        const touch = this.scene.touch; // joystick korvaa näppäimet kun sitä työnnetään
         if (touch && touch.isActive()) {
             dx = touch.direction.x;
             dy = touch.direction.y;
@@ -53,13 +53,13 @@ export default class Player extends Phaser.GameObjects.Sprite {
         this.setMoving(dx !== 0 || dy !== 0);
     }
 
-    setMoving(moving) { // vaihtaa animaation vain kun liikkuminen alkaa tai loppuu
+    setMoving(moving) { // vaihtaa animaation vaan kun liikkuminen alkaa tai loppuu
         if (moving === this.moving) return;
         this.moving = moving;
         this.play(`${this.charName}_${moving ? 'run' : 'idle'}`);
     }
 
-    freeze() { // pysäyttää hahmon ja vaihtaa seisomisanimaatioon, esim. huoneen vaihdossa
+    freeze() { // pysäyttää hahmon ja vaihtaa seisomisanimaatioon esim kun huone vaihtuu
         this.body.setVelocity(0, 0);
         this.setMoving(false);
     }
@@ -69,6 +69,6 @@ export default class Player extends Phaser.GameObjects.Sprite {
             || this.cursors.up.isDown || this.cursors.down.isDown
             || this.keys.A.isDown || this.keys.D.isDown
             || this.keys.W.isDown || this.keys.S.isDown
-            || (this.scene.touch && this.scene.touch.isActive()); // joystickin työntäminen on liikkumista, joten silmät huomaavat sen
+            || (this.scene.touch && this.scene.touch.isActive()); // joystickin työntäminen on liikkumista, joten silmät näkee sen
     }
 }
