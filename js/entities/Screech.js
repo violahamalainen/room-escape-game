@@ -42,7 +42,7 @@ export default class Screech {
         director.start('screech');
         playSfx(this.scene, 'screech');
         this.scene.cameras.main.flash(250, 255, 0, 0);
-        this.scene.showMessage(TEXTS.screechWarning, WARNING_MS);
+        this.scene.showMessage(TEXTS.screechWarning, WARNING_MS, { id: 'screechWarn', max: 1, danger: true });
         this.scene.time.delayedCall(WARNING_MS, () => this.appear()); // varotuksen jälkeen kutsutaan appear()
     }
 
@@ -123,7 +123,6 @@ export default class Screech {
         this.active = false;
         playSfx(this.scene, 'banish');
         this.removeCreature(true);
-        this.scene.showMessage(TEXTS.screechBanished, 900);
         this.scene.director.end();
         this.scheduleNext(this.nextGap());
     }
@@ -134,7 +133,6 @@ export default class Screech {
 
         if (!this.scene.changingRoom && !this.scene.hiding) {
             this.scene.hurtPlayer('screech');
-            this.scene.showMessage(TEXTS.screechMissed, 1200);
         }
 
         this.scene.director.end();

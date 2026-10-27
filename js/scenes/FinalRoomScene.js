@@ -66,8 +66,6 @@ export default class FinalRoomScene extends Phaser.Scene {
             fontFamily: 'Arial', fontSize: '22px', color: '#ffd54f'
         }).setOrigin(0.5).setDepth(50);
         this.showMessage('Click a flask, then click a socket.', 6000);
-
-        this.input.keyboard.on('keydown-N', () => this.toggleNotes());
     }
 
     // -----------------------------------------------------------
@@ -112,33 +110,20 @@ export default class FinalRoomScene extends Phaser.Scene {
         });
     }
 
-    createNotesPanel() { // vihjepaneeli ylhäällä, sisältö tulee huoneiden notes-teksteistä
+    createNotesPanel() { // vihjepaneeli ylhäällä, aina näkyvissä, sisältö tulee huoneiden notes-teksteistä
         this.notesBg = this.add.rectangle(GAME_WIDTH / 2, 170, 760, 220, 0x000000, 0.92);
         this.notesBg.setStrokeStyle(3, 0xf5f0dc).setDepth(40);
 
         const clues = ROOMS.filter((r) => r.note).map((r, i) => `${i + 1}. ${r.note.text}`);
-        this.notesText = this.add.text(GAME_WIDTH / 2, 170, ['CLUES   (N = hide / show)', '', ...clues].join('\n'), {
+        this.notesText = this.add.text(GAME_WIDTH / 2, 170, ['CLUES', '', ...clues].join('\n'), {
             fontFamily: 'Arial', fontSize: '22px', color: '#f5f0dc', wordWrap: { width: 720 }, lineSpacing: 6
         }).setOrigin(0.5).setDepth(41);
-
-        // klikattava nappi samalle asialle (esim. kosketusnäyttöä varten)
-        const button = this.add.text(110, 30, 'Clues (N)', {
-            fontFamily: 'Arial', fontSize: '22px', color: '#ffffff',
-            backgroundColor: '#444444', padding: { x: 12, y: 6 }
-        }).setOrigin(0.5).setDepth(50).setInteractive({ useHandCursor: true });
-        button.on('pointerdown', () => this.toggleNotes());
     }
 
     // -----------------------------------------------------------
     //                      PELAAJAN TOIMINNOT
     // -----------------------------------------------------------
 
-    toggleNotes() {
-        if (this.finished) return;
-        this.notesOpen = !this.notesOpen;
-        this.notesBg.setVisible(this.notesOpen);
-        this.notesText.setVisible(this.notesOpen);
-    }
 
     deselect() { // poistaa valinnan ja palauttaa alustan reunan normaaliksi
         if (this.selected) {
@@ -217,7 +202,7 @@ export default class FinalRoomScene extends Phaser.Scene {
         this.time.delayedCall(900, () => {
             this.cameras.main.fadeOut(700, 0, 0, 0);
             this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-                this.scene.start('WinScene', { seconds });
+                this.scene.start('OutroScene', { seconds });
             });
         });
     }

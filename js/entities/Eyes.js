@@ -62,7 +62,7 @@ export default class Eyes {
         this.state = 'warning';
         this.setLook('warning'); // silmät aukeaa puoliksi keltaisena
         if (!this.scene.hiding) { // ei piirretä kuplaa jos pelaaja on kaapissa
-            this.scene.showMessage(TEXTS.eyesWarning, this.data.warnMs);
+            this.scene.showMessage(TEXTS.eyesWarning, this.data.warnMs, { id: 'eyesWarn', max: 2, danger: true });
         }
         this.scene.time.delayedCall(this.data.warnMs, () => this.open());
     }
@@ -76,7 +76,7 @@ export default class Eyes {
         this.hitThisOpening = false; // uusi avautuminen, voi osua taas kerran
         this.setLook('open'); // silmät auki punaisena
         if (!this.scene.hiding) {
-            this.scene.showMessage(TEXTS.eyesOpen, openFor);
+            this.scene.showMessage(TEXTS.eyesOpen, openFor, { id: 'eyesOpen', max: 2, danger: true });
         }
         this.scene.time.delayedCall(openFor, () => this.close());
     }
@@ -107,7 +107,6 @@ export default class Eyes {
         if (s.player.isTryingToMove()) { // liikkui silmien ollessa auki
             this.hitThisOpening = true;
             s.hurtPlayer('eyes'); // sama damage-funktio kuin rushilla ja screechillä
-            s.showMessage(TEXTS.eyesSaw, 1200);
         }
     }
 }

@@ -137,9 +137,8 @@ export function addDecor(scene) {
     });
 }
 
-// koodilla piirretty kultainen avain, leijuu ja hohtaa. Palauttaa olion, jolla on destroy()
+// koodilla piirretty kultainen avain, leijuu. Palauttaa olion, jolla on destroy()
 export function drawKey(scene, x, y) {
-    const glow = scene.add.circle(0, 0, 24, 0xffd54f, 0.18); // kultainen hohto
     const g = scene.add.graphics();
     g.lineStyle(4, 0xffd54f, 1);
     g.strokeCircle(-12, 0, 7);  // avaimen pää (rengas)
@@ -148,7 +147,7 @@ export function drawKey(scene, x, y) {
     g.fillRect(14, 2, 4, 7);    // hammas
     g.fillRect(21, 2, 4, 5);    // toinen hammas
 
-    const key = scene.add.container(x, y, [glow, g]).setDepth(3);
+    const key = scene.add.container(x, y, [g]).setDepth(3);
     const bob = scene.tweens.add({ targets: key, y: y - 6, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
     return { destroy: () => { bob.stop(); key.destroy(); } }; // pysäytetään leijuminen ennen poistoa
@@ -157,10 +156,10 @@ export function drawKey(scene, x, y) {
 const DOOR_TINT_ALPHA = 0.1; // kuinka vahva punainen sävy lukitun oven päällä on (0 = ei lainkaan)
 const SHOW_LOCK = true;       // false = ei riippulukkoa oven päällä
 
-// ovi seinän aukossa: pala samaa seinäruutua kuin seinät, punainen sävy ja riippulukko, ja niiden alla pimeä aukko
-// cx, cy = aukon keskipiste, w, h = aukon koko (sama kuin oven fysiikkalaatikolla)
+// ovi seinän aukossa: pala samaa seinäruutua kuin seinät, punainen sävy ja lukko. Auki oleva ovi on musta aukko
+// cx, cy = aukon keskipiste, w, h = aukon koko 
 export function buildDoorArt(scene, cx, cy, w, h) {
-    const passage = scene.add.rectangle(cx, cy, w, h, 0x1b130e).setDepth(2); // aukko oven takana
+    scene.add.rectangle(cx, cy, w, h, 0x050508).setDepth(2); // aukko oven takana, musta
 
     const door = buildWallBlock(scene, w, h, 3); // kivipala samasta seinäruudusta kuin seinät
     door.setPosition(cx - w / 2, cy - h / 2);    // containerin origo on vasen yläkulma, joten ovi vetäytyy ylöspäin
@@ -184,32 +183,19 @@ export function buildDoorArt(scene, cx, cy, w, h) {
         door.add(lock);
     }
 
-    const glow = scene.add.rectangle(cx, cy, w, h, 0x66ff88).setAlpha(0).setDepth(3); // vihreä hohto auki olevan oven päällä
-
     let isOpen = null; // null = tilaa ei ole vielä asetettu
 
     return {
-        setOpen(open) { // open = true: ovi vetäytyy ylös, false: ovi kiinni
+        setOpen(open) { // open = true: ovi vetäytyy ylös ja jättää mustan aukon, false: ovi kiinni
             if (open === isOpen) return; // ei tehdä mitään jos tila ei muutu
             const first = isOpen === null; // ensimmäinen asetus tehdään heti ilman animaatiota
             isOpen = open;
 
             scene.tweens.killTweensOf(door);
-            scene.tweens.killTweensOf(glow);
-            const doorScaleY = open ? 0.05 : 1;
-            const doorAlpha = open ? 0 : 1;
-            const glowAlpha = open ? 0.2 : 0;
-
-            if (first) {
-                door.setScale(1, doorScaleY).setAlpha(doorAlpha);
-                glow.setAlpha(glowAlpha);
-            } else {
-                scene.tweens.add({ targets: door, scaleY: doorScaleY, alpha: doorAlpha, duration: 450, ease: 'Sine.easeInOut' });
-                scene.tweens.add({ targets: glow, alpha: glowAlpha, duration: 450 });
-            }
-
-            passage.setFillStyle(open ? 0x050508 : 0x1b130e);
-            passage.setStrokeStyle(3, open ? 0x66bb6a : 0x8a3a3a, 0.9); // vihreä reuna = voi mennä läpi, punainen = lukossa
+            const scaleY = open ? 0.05 : 1;
+            const alpha = open ? 0 : 1;
+            if (first) door.setScale(1, scaleY).setAlpha(alpha);
+            else scene.tweens.add({ targets: door, scaleY, alpha, duration: 450, ease: 'Sine.easeInOut' });
         }
     };
 }

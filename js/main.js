@@ -12,7 +12,7 @@ import TilePickerScene from './scenes/TilePickerScene.js';
 import PreviewScene from './scenes/PreviewScene.js';
 import IntroScene from './scenes/IntroScene.js';
 import { setupPage } from './systems/Page.js';
-
+import OutroScene from './scenes/OutroScene.js';
 
 
 
@@ -34,7 +34,7 @@ const config = {
     },
     scene: [
         BootScene, MenuScene, IntroScene, HowToPlayScene, ScoreboardScene, SettingsScene,
-        RoomScene, GameOverScene, FinalRoomScene, WinScene,
+        RoomScene, GameOverScene, FinalRoomScene, WinScene, OutroScene,
         TilePickerScene, PreviewScene
     ]
 };

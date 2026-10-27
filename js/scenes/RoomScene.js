@@ -15,7 +15,7 @@ import { createHearts } from '../systems/Hud.js';
 import { createLowHealth } from '../systems/LowHealth.js';
 import { playSfx, playMusic, prefetchMusic } from '../systems/Audio.js';
 import { createTouchControls } from '../systems/TouchControls.js';
-
+import Bubbles from '../systems/Bubbles.js';
 
 
 const WALL = 40;
@@ -37,7 +37,7 @@ export default class RoomScene extends Phaser.Scene {
         this.key = null;
         this.keyArt = null; // avaimen piirretty kuva
         this.backDoor = null;
-        this.messageTimer = null;
+        this.saidAt = {}; // milloin kukin viesti on viimeksi näytetty, kuplien jäähy
         this.lastCause = 'unknown'; // mikä viimeksi satutti pelaajaa, game over -ruutu käyttää tätä
         this.doorWasOpen = null; // oliko ovi auki viimeksi, null = ei vielä tiedossa (ei ääntä huoneen alussa)
         this.lockedSoundAt = 0;  // aikaleima: lukitun oven ääni ei toistu liian tiheään
@@ -77,12 +77,7 @@ export default class RoomScene extends Phaser.Scene {
         this.hearts = createHearts(this); // sydämet kuvina oikeassa yläkulmassa
         this.lowHealth = createLowHealth(this); // punainen reunahehku kun sydämiä on vähän
 
-        // puhekupla: pelaajan ajatukset näkyy pelaajan pään päällä ja seuraa pelaajaa
-        this.messageText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '', {
-            fontFamily: 'Arial', fontSize: '22px', fontStyle: 'italic', color: '#ffffff',
-            padding: { x: 12, y: 8 },
-            wordWrap: { width: 460 }, align: 'center'
-        }).setOrigin(0.5, 1).setDepth(30).setVisible(false);
+        this.bubbles = new Bubbles(this); // pelaajan ajatukset stäckätty pään yläpuolella
 
         if (this.roomIndex === 0) { // ohjevihje vain huoneessa 1
             this.add.text(20, 38, this.touch ? TEXTS.controlsHintTouch : TEXTS.controlsHint, {
@@ -218,7 +213,7 @@ export default class RoomScene extends Phaser.Scene {
         this.keyArt.destroy(); // piirretty avain pois
         this.updateDoorColor();
         this.updateHud();
-        this.showMessage(TEXTS.key);
+        this.showMessage(TEXTS.key, 3500, { id: 'key', max: 1 });
     }
     
     collectNearbyPickups() { // tarkistaa onko pelaaja tarpeeksi lähellä esinettä, jos on -> kerätään se
@@ -234,10 +229,10 @@ export default class RoomScene extends Phaser.Scene {
 
         if (pickup.kind === 'object') {
             s.object = true;
-            this.showMessage(TEXTS.object);
+            this.showMessage(TEXTS.object, 3500, { id: 'object', max: 1 });
         } else {
             s.note = true;
-            this.showMessage(TEXTS.note);
+            this.showMessage(TEXTS.note, 3500, { id: 'note', max: 1 });
         }
 
         playSfx(this, 'pickup');
@@ -298,14 +293,14 @@ export default class RoomScene extends Phaser.Scene {
         if (this.changingRoom) return;
 
         if (!gameState.roomState(this.roomIndex).key) {
-            this.showMessage(TEXTS.doorLocked, 2500);
             this.playLockedSound();
+            this.showMessage(TEXTS.doorLocked, 4000, { id: 'doorLocked', cooldownMs: 15000 });
             return;
         }
 
         if (!this.canOpenExit()) {
-            this.showMessage(TEXTS.gateLocked, 3000);
             this.playLockedSound();
+            this.showMessage(TEXTS.gateLocked, 4500, { id: 'gateLocked', cooldownMs: 15000 });
             return;
         }
 
@@ -386,35 +381,28 @@ export default class RoomScene extends Phaser.Scene {
     updateHud() {
         const s = gameState.roomState(this.roomIndex); // päivitetään HUD
 
-        this.hudText.setText(
-            `Room ${this.roomIndex + 1} of ${ROOMS.length}   Key: ${s.key ? 'yes' : 'no'}   Try ${gameState.tries}`
-        );
+        this.hudText.setText(`Room ${this.roomIndex + 1} of ${ROOMS.length}   Try ${gameState.tries}`);
         this.hearts.set(this.health.hearts); // päivittää sydänkuvat
         this.lowHealth.set(this.health.hearts); // hehku päälle kun on enää yksi sydän
     }
 
-    showMessage(text, duration = 3500) { // näytetään pelaajan ajatus puhekuplassa, esim. kun hän kerää avaimen
-        this.messageText.setText(text).setVisible(text !== ''); // tyhjää tekstiä ei näytetä
-        this.positionBubble(); // asetetaan heti oikeaan paikkaan, ettei kupla välähdä väärässä kohdassa
-        if (this.messageTimer) this.messageTimer.remove(false); // jos on jo teksti, poistetaan vanha ajastin
-        if (duration > 0) { // 0 = teksti pysyy kunnes se poistetaan
-            this.messageTimer = this.time.delayedCall(Math.max(duration, 2500), () => this.clearMessage()); // jokainen kupla näkyy vähintään 2,5 s
+    // näyttää pelaajan ajatuksen kuplassa. rule = { id, max, cooldownMs, danger }
+    showMessage(text, duration = 3500, rule = {}) {
+        const { id, max, cooldownMs, danger } = rule;
+
+        if (id) {
+            const count = gameState.seen[id] || 0; // montako kertaa tämä rivi on sanottu koko pelin aikana
+            if (max !== undefined && count >= max) return; // sanottu jo tarpeeksi monta kertaa
+            const last = this.saidAt[id];
+            if (cooldownMs && last !== undefined && this.time.now - last < cooldownMs) return; // sanottu vasta äsken
+            gameState.seen[id] = count + 1;
+            this.saidAt[id] = this.time.now;
         }
+        this.bubbles.add(text, duration, !!danger);
     }
 
-    clearMessage() { 
-        if (this.messageTimer) this.messageTimer.remove(false);
-        this.messageText.setText('').setVisible(false);
-    }
-
-    positionBubble() { // kupla pelaajan pään päälle (tai kaapin päälle kun pelaaja piilossa), pysyy ruudun sisällä
-        if (!this.player || !this.messageText.visible) return;
-
-        const half = this.messageText.width / 2 + 10;
-        const x = Phaser.Math.Clamp(this.player.x, half, GAME_WIDTH - half); // ei mene ruudun sivuille
-        const offset = this.hiding ? 62 : 52; // kaappi on korkeampi kuin pelaaja
-        const y = Math.max(this.player.y - offset, this.messageText.height + 60); // ei mene HUD:n päälle
-        this.messageText.setPosition(x, y);
+    clearMessage() { // kaikki kuplat pois
+        this.bubbles.clear();
     }
 
     update() { // pelin update loop, tarkistetaan pelaajan liikkuminen, kerätyt esineet ja kaappiin piiloutuminen
@@ -440,11 +428,11 @@ export default class RoomScene extends Phaser.Scene {
             const nearCrate = this.closets.some((c) => c.isNear(this.player));
             this.touch.setHideState(this.hiding ? 'out' : (nearCrate ? 'ready' : 'off'));
         }
-        
+
         this.rush.update();
         if (this.screech) this.screech.update(); // screech tarkistaa piiloutuiko pelaaja
         this.eyes.forEach((e) => e.update()); // jokainen silmäpari tarkistaa liikkuuko pelaaja
 
-        this.positionBubble(); // kupla seuraa pelaajaa
+                this.bubbles.update(); // kupla stack seuraa pelaajaa
     }
 }

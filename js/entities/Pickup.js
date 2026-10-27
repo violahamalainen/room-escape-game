@@ -22,12 +22,10 @@ export default class Pickup {
         this.x = data.x;
         this.y = data.y;
 
-        const parts = []; // pickupin osat: hohto ja varsinainen kuva
+        const parts = []; 
         if (kind === 'object') {
-            parts.push(scene.add.circle(0, 0, 24, data.color, 0.22)); // pullon värinen hohto
             parts.push(scene.add.image(0, 0, 'dungeonSheet', `flask_big_${data.flask}`).setScale(ART_SCALE));
         } else {
-            parts.push(scene.add.circle(0, 0, 24, 0xf5f0dc, 0.18)); // vaalea hohto
             parts.push(drawScroll(scene));
         }
 

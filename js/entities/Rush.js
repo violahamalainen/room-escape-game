@@ -119,7 +119,7 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
 
     startStage1() { // ensimmäinen varoitus: hento ja harvinainen vilkahtelu
         this.scene.tweens.killTweensOf(this.overlay); // pysäyttää edellisen hyökkäyksen hitaan vaalenemisen
-        this.scene.showMessage(TEXTS.rushWarning1, this.settings.warn1Ms);
+        this.scene.showMessage(TEXTS.rushWarning1, this.settings.warn1Ms, { id: 'rushWarn1', max: 1, danger: true });
 
         this.startFlicker(140, () => {
             this.overlay.setAlpha(Math.random() < 0.35 ? Phaser.Math.FloatBetween(0.08, 0.22) : 0); // vain kolmasosa kerroista, ja heikosti
@@ -131,7 +131,7 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
     startStage2() { // toinen varoitus: voimakas vilkkuminen ja poksahtelevat valot
         if (this.scene.changingRoom) return;
 
-        this.scene.showMessage(TEXTS.rushWarning2, this.settings.warn2Ms);
+        this.scene.showMessage(TEXTS.rushWarning2, this.settings.warn2Ms, { id: 'rushWarn2', max: 2, danger: true });
         this.startFlicker(90, () => this.overlay.setAlpha(Phaser.Math.FloatBetween(0, 0.75)));
         this.startPops();
         playSfx(this.scene, 'rushWarn');
@@ -199,10 +199,6 @@ export default class Rush { // odota, varoita (kaksi vaihetta), hyökkää sumun
 
         // huone pysyy hetken pimeänä ja vaalenee sitten hitaasti
         this.scene.tweens.add({ targets: this.overlay, alpha: 0, duration: FADE_OUT_MS });
-
-        if (this.scene.hiding) {
-            this.scene.showMessage(TEXTS.rushPassedHiding, 3000);
-        }
 
         this.scene.director.end(); // tapahtuma päättyi, hiljainen väli alkaa
 

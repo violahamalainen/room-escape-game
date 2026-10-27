@@ -20,7 +20,7 @@ export default class HowToPlayScene extends Phaser.Scene {
 
         // yksi rivi per ohje, rivit alekkain 85 pikselin välein
         TEXTS.howToPlay.forEach((line, i) => {
-            this.add.text(GAME_WIDTH / 2, 190 + i * 72, line, {
+            this.add.text(GAME_WIDTH / 2, 175 + i * 80, line, {
                 fontFamily: 'Arial', fontSize: '24px', color: '#dddddd',
                 wordWrap: { width: 1000 }, align: 'center'
             }).setOrigin(0.5);

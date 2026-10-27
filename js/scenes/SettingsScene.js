@@ -24,10 +24,6 @@ export default class SettingsScene extends Phaser.Scene {
         this.addVolumeRow('Music volume', 'musicVolume', 260);
         this.addVolumeRow('Sound effects volume', 'sfxVolume', 400);
 
-        this.add.text(GAME_WIDTH / 2, 520, {
-            fontFamily: 'Arial', fontSize: '20px', color: '#888888'
-        }).setOrigin(0.5);
-
         createButton(this, GAME_WIDTH / 2, 640, 'Back', () => fadeToScene(this, 'MenuScene'), 30);
     }
 
