@@ -53,10 +53,12 @@ Phone or tablet:
 - Speech bubbles are the wizaards thoughts, they guide the player.
 - A pulsing red light when at one heart
 
+
 ## Testing
 
 - I tested on Chrome and Safari
 - Testing shortcuts: press 0 in a room to jumpstart the final puzzle, to skip the rooms 1-4. Add '?touch=1' to the address to show the touch controls on a desktop.
+
 
 ## Credits
 
