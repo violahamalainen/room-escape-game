@@ -40,10 +40,16 @@ export default class Player extends Phaser.GameObjects.Sprite {
         if (this.cursors.up.isDown || this.keys.W.isDown) dy -= 1;
         if (this.cursors.down.isDown || this.keys.S.isDown) dy += 1;
 
+        const touch = this.scene.touch; // kosketusohjaus: joystick korvaa näppäimet kun sitä työnnetään
+        if (touch && touch.isActive()) {
+            dx = touch.direction.x;
+            dy = touch.direction.y;
+        }
+
         const direction = new Phaser.Math.Vector2(dx, dy).normalize().scale(PLAYER_SPEED);
         this.body.setVelocity(direction.x, direction.y);
 
-        if (dx !== 0) this.setFlipX(FACES_RIGHT ? dx < 0 : dx > 0); // käännetään kuva kulkusuuntaan
+        if (Math.abs(dx) > 0.25) this.setFlipX(FACES_RIGHT ? dx < 0 : dx > 0); // käännetään kuva kulkusuuntaan, pieni heilunta ei käännä
         this.setMoving(dx !== 0 || dy !== 0);
     }
 
@@ -62,6 +68,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
         return this.cursors.left.isDown || this.cursors.right.isDown
             || this.cursors.up.isDown || this.cursors.down.isDown
             || this.keys.A.isDown || this.keys.D.isDown
-            || this.keys.W.isDown || this.keys.S.isDown;
+            || this.keys.W.isDown || this.keys.S.isDown
+            || (this.scene.touch && this.scene.touch.isActive()); // joystickin työntäminen on liikkumista, joten silmät huomaavat sen
     }
 }

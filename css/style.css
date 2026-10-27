@@ -3,11 +3,57 @@ html, body {
     padding: 0;
     width: 100%;
     height: 100%;
+    height: 100dvh;                   /* dvh = huomioi puhelimen osoitepalkin, joka muuten syö korkeutta */
     background-color: #000;
     overflow: hidden;
+    overscroll-behavior: none;        /* ei "vedä päivitä" -liikettä eikä vieritystä */
+    touch-action: none;               /* sormi ei vieritä eikä zoomaa sivua */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;      /* ei pitkän painalluksen valikkoa */
+    -webkit-tap-highlight-color: transparent;
+}
+
+input {                               /* nimikenttä tarvitsee tekstin valinnan, muuten Safari ei salli kirjoittamista */
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 #game-container {
     width: 100%;
     height: 100%;
+    height: 100dvh;
+}
+
+#rotate-overlay {                     /* "käännä puhelin" -viesti, piilossa oletuksena */
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: #000;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    line-height: 1.5;
+    padding: 24px;
+}
+
+#rotate-overlay .icon {
+    font-size: 64px;
+    margin-bottom: 12px;
+}
+
+#rotate-overlay .small {
+    font-size: 20px;
+    color: #aaa;
+}
+
+@media (orientation: portrait) and (pointer: coarse) {   /* näkyy vain kosketuslaitteilla, kun ruutu on pystyssä */
+    #rotate-overlay {
+        display: flex;
+    }
 }

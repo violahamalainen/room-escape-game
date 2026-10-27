@@ -6,6 +6,7 @@ class GameState {
         this.playerName = ''; // pelaajan nimi, ei nollaudu uuden pelin alussa
         this.runActive = false; // onko keskeneräinen peli käynnissä
         this.runName = ''; // keskeneräisen pelin nimi pienillä kirjaimilla
+        this.clockWasRunning = false; // oliko kello käynnissä kun peli pysäytettiin
         this.resetAll();
     }
 
@@ -55,6 +56,20 @@ class GameState {
         if (this.clockStart !== null) {
             this.activeMs += Date.now() - this.clockStart;
             this.clockStart = null;
+        }
+    }
+    
+    pauseClock() { // peli pysähtyi (välilehti piilossa tai puhelin pystyssä): kello pysähtyy, ja muistetaan oliko se käynnissä
+        if (this.clockStart !== null) {
+            this.clockWasRunning = true;
+            this.stopClock();
+        }
+    }
+
+    resumeClock() { // peli jatkuu: kello käynnistyy vain jos se oli käynnissä ennen pysähdystä
+        if (this.clockWasRunning) {
+            this.clockWasRunning = false;
+            this.startClock();
         }
     }
 

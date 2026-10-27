@@ -14,6 +14,8 @@ import { buildFloor, paintWall, addDecor, drawKey, buildDoorArt } from '../syste
 import { createHearts } from '../systems/Hud.js';
 import { createLowHealth } from '../systems/LowHealth.js';
 import { playSfx, playMusic, prefetchMusic } from '../systems/Audio.js';
+import { createTouchControls } from '../systems/TouchControls.js';
+
 
 
 const WALL = 40;
@@ -65,6 +67,9 @@ export default class RoomScene extends Phaser.Scene {
         const spawn = this.getSpawn(); // määrittää pelaajan spawn pointin riippuen siitä, mistä hän tulee huoneeseen
         this.player = new Player(this, spawn.x, spawn.y);
         this.health = new Health(this, gameState.hearts); 
+        this.touch = createTouchControls(this); // joystick ja HIDE-nappi, null jos laite ei tue kosketusta
+        this.hideLabel = this.touch ? 'Tap HIDE' : 'E: hide';             // laatikon päällä näkyvät tekstit
+        this.outLabel = this.touch ? 'Tap to come out' : 'E: come out';
 
         this.hudText = this.add.text(20, 8, '', { // teksti kertoo pelaajalle huoneen numeron ja onko avain saatu
             fontFamily: 'Arial', fontSize: '22px', color: '#ffffff'
@@ -80,7 +85,7 @@ export default class RoomScene extends Phaser.Scene {
         }).setOrigin(0.5, 1).setDepth(30).setVisible(false);
 
         if (this.roomIndex === 0) { // ohjevihje vain huoneessa 1
-            this.add.text(20, 38, TEXTS.controlsHint, {
+            this.add.text(20, 38, this.touch ? TEXTS.controlsHintTouch : TEXTS.controlsHint, {
                 fontFamily: 'Arial', fontSize: '18px', color: '#9e9e9e'
             }).setDepth(30);
         }
@@ -423,13 +428,19 @@ export default class RoomScene extends Phaser.Scene {
 
         if (!this.hiding) this.collectNearbyPickups();
 
-        this.closets.forEach((c) => { // kaapin teksti: piilossa ollessa vain sen kaapin päällä lukee "E: come out"
+        this.closets.forEach((c) => { // laatikon teksti: piilossa ollessa vain sen laatikon päällä lukee ulos-ohje
             if (this.hiding) {
-                c.setPrompt('E: come out', c === this.hidingCloset);
+                c.setPrompt(this.outLabel, c === this.hidingCloset);
             } else {
-                c.setPrompt('E: hide', c.isNear(this.player));
+                c.setPrompt(this.hideLabel, c.isNear(this.player));
             }
         });
+
+        if (this.touch) { // HIDE-napin ulkonäkö: himmeä, kirkas kun laatikko on lähellä, tai "COME OUT" kun piilossa
+            const nearCrate = this.closets.some((c) => c.isNear(this.player));
+            this.touch.setHideState(this.hiding ? 'out' : (nearCrate ? 'ready' : 'off'));
+        }
+        
         this.rush.update();
         if (this.screech) this.screech.update(); // screech tarkistaa piiloutuiko pelaaja
         this.eyes.forEach((e) => e.update()); // jokainen silmäpari tarkistaa liikkuuko pelaaja

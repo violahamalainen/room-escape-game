@@ -1,6 +1,7 @@
 // kaikki pelin tekstit yhdessä paikassa, täältä voi muokata niitä
 export const TEXTS = {
     controlsHint: 'WASD / arrows: move     E: hide',
+    controlsHintTouch: 'Joystick: move     HIDE button: hide',
 
     key: 'A key. This should open the door.',
     doorLocked: 'Locked. There must be a key somewhere.',
@@ -33,10 +34,11 @@ export const TEXTS = {
 
     howToPlayTitle: 'HOW TO PLAY',
     howToPlay: [
-        'Move with WASD or the arrow keys.',
-        'Press E next to a closet to hide. Press E again to come out.',
+        'Move with WASD or the arrow keys. On a phone, drag the joystick.',
+        'Next to a crate, press E (or tap HIDE) to hide inside. Do it again to come out.',
         'Find the key in each room to open the door. You can go back through the left door.',
-        'Collect every object and note. You will need them in the final room.',
-        'Something dangerous lives in these rooms. Watch, listen and learn.'
+        'Collect every flask and note. You will need them in the final room.',
+        'Something dangerous lives in these rooms. Watch, listen and learn.',
+        'Warning: the game has flashing lights and screen shake.'
     ]
 };

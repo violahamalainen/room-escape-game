@@ -11,6 +11,7 @@ import WinScene from './scenes/WinScene.js';
 import TilePickerScene from './scenes/TilePickerScene.js';
 import PreviewScene from './scenes/PreviewScene.js';
 import IntroScene from './scenes/IntroScene.js';
+import { setupPage } from './systems/Page.js';
 
 
 
@@ -22,6 +23,7 @@ const config = {
     parent: 'game-container',
     backgroundColor: '#111111',
     dom: { createContainer: true }, // tarvitaan, jotta nimikenttä (HTML) voi olla pelin päällä
+    input: { activePointers: 3 }, // kolme sormea yhtä aikaa: joystick, HIDE-nappi ja yksi napautus
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
@@ -37,4 +39,5 @@ const config = {
     ]
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+setupPage(game); // pystyasennon viesti ja kellon pysäytys
